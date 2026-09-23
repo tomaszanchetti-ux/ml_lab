@@ -1,0 +1,8 @@
+jupyter
+ipykernel
+nbconvert
+pandas
+numpy
+scikit-learn
+matplotlib
+xlrd

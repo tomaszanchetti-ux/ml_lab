@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>ML Fundamentals — Module 1</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+</style>
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EDEF;
+    --ink: #131A1F;
+    --ink-muted: #55646D;
+    --ink-faint: #82949E;
+    --rule: #D5DFE3;
+    --rule-strong: #B3C2C9;
+    --accent: #2B3FA8;
+    --accent-soft: #E6E9F7;
+    --on-accent: #FFFFFF;
+    --good: #1F6B4E;
+    --good-soft: #E2F0E9;
+    --bad: #9E3628;
+    --bad-soft: #F7E7E4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1417;
+      --surface: #151D21;
+      --surface-2: #1B252A;
+      --ink: #E6EDF0;
+      --ink-muted: #9AA9B1;
+      --ink-faint: #74858D;
+      --rule: #232F35;
+      --rule-strong: #35454C;
+      --accent: #7DBDD6;
+      --accent-soft: #16282F;
+      --on-accent: #0E1417;
+      --good: #74C7A0;
+      --good-soft: #132521;
+      --bad: #E4907E;
+      --bad-soft: #2A1A17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1417;
+    --surface: #151D21;
+    --surface-2: #1B252A;
+    --ink: #E6EDF0;
+    --ink-muted: #9AA9B1;
+    --ink-faint: #74858D;
+    --rule: #232F35;
+    --rule-strong: #35454C;
+    --accent: #7DBDD6;
+    --accent-soft: #16282F;
+    --on-accent: #0E1417;
+    --good: #74C7A0;
+    --good-soft: #132521;
+    --bad: #E4907E;
+    --bad-soft: #2A1A17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 1.15rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  p { margin: 0 0 0.8em; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 3rem 0 1.5rem;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 5.5vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- objective banner ---------- */
+
+  .objective {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 1.35rem 1.4rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .objective .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .objective p { font-size: 1.05rem; line-height: 1.45; font-weight: 600; }
+  .objective .small { font-size: 0.88rem; font-weight: 400; opacity: 0.92; margin-top: 0.6rem; }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 2.75rem; }
+
+  h2 {
+    font-size: 1.18rem;
+    letter-spacing: -0.012em;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  h2 .n {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--ink-muted); font-size: 0.93rem; margin: 0.9rem 0 0; }
+
+  /* ---------- cards ---------- */
+
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .q .ask {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 0.55rem;
+    line-height: 1.35;
+  }
+
+  .q .real {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+    text-transform: none;
+  }
+  .q .real b {
+    display: block;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.28rem;
+    font-weight: 600;
+  }
+
+  .say {
+    background: var(--good-soft);
+    border-left: 2px solid var(--good);
+    padding: 0.85rem 1rem;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+  }
+  .say em { color: var(--ink-muted); font-style: italic; }
+
+  .trap {
+    font-size: 0.86rem;
+    color: var(--bad);
+    line-height: 1.5;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .trap b {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    flex: none;
+    padding-top: 0.24em;
+  }
+
+  ul.tight { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.35rem; font-size: 0.94rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  /* ---------- callout ---------- */
+
+  .call {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 1.1rem 1.25rem;
+    margin: 1.15rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+  .call .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .call b { color: var(--ink); }
+
+  /* ---------- never list ---------- */
+
+  .never {
+    background: var(--bad-soft);
+    border: 1px solid var(--bad);
+    padding: 1.15rem 1.3rem;
+    margin-top: 1rem;
+  }
+  .never ol { margin: 0; padding-left: 1.2rem; }
+  .never li {
+    margin-bottom: 0.55rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .never li:last-child { margin-bottom: 0; }
+  .never li b { color: var(--bad); }
+
+  /* ---------- pitch ---------- */
+
+  .pitch {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    padding: 1.3rem 1.4rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  .pitch .beat {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin: 1.1rem 0 0.35rem;
+    font-weight: 600;
+  }
+  .pitch .beat:first-child { margin-top: 0; }
+
+  /* ---------- checklist ---------- */
+
+  .checks { margin-top: 1rem; border-top: 1px solid var(--rule); }
+  .check {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .check .box {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--rule-strong);
+    margin-top: 0.24em;
+  }
+  .check .txt { font-size: 0.94rem; line-height: 1.5; color: var(--ink-muted); }
+  .check .txt b { color: var(--ink); }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--rule-strong);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+
+<style>
+  /* ---------- print ---------- */
+  @page { size: A4; margin: 13mm 13mm 15mm; }
+
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.4pt;
+      line-height: 1.45;
+    }
+    body { padding: 0; }
+    .wrap { max-width: none; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .masthead { padding: 0 0 0.7rem; }
+    h1 { font-size: 22pt; }
+    .sub { font-size: 9.5pt; }
+    .objective { margin-top: 0.9rem; padding: 0.85rem 1rem; }
+    .objective p { font-size: 11pt; }
+    .objective .small { font-size: 9pt; }
+
+    section { padding-top: 1.25rem; }
+    h2 { font-size: 12.5pt; break-after: avoid; page-break-after: avoid; }
+    .lede { font-size: 9.2pt; margin-top: 0.5rem; }
+
+    .q, .never, .call, .objective {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* prosa: puede partirse entre páginas sin romper la lectura */
+    .pitch, .checks { break-inside: auto; page-break-inside: auto; }
+    .pitch .beat { break-after: avoid; page-break-after: avoid; }
+    .check { break-inside: avoid; page-break-inside: avoid; }
+
+    .q { padding: 0.8rem 0.9rem 0.85rem; margin-top: 0.65rem; }
+    .q .ask { font-size: 10.6pt; }
+    .q .real { font-size: 7.6pt; }
+    .say { font-size: 9.4pt; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+    .trap { font-size: 8.6pt; }
+    .pitch { font-size: 10pt; padding: 0.9rem 1rem; }
+    ul.tight li, .never li, .check .txt { font-size: 9.4pt; }
+
+    .colophon { margin-top: 1.6rem; font-size: 8pt; }
+  }
+</style>
+</head>
+<style>
+  /* ---------- fit matrix (nuevo en esta hoja) ---------- */
+  .fit { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .fit th, .fit td { text-align: left; vertical-align: top; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .fit th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); }
+  .fit td.st { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; font-weight: 600; }
+  .ok { color: var(--good); } .mid { color: #9A6B12; } .no { color: var(--bad); }
+  .fit td.req { font-weight: 600; width: 27%; }
+  .fit td.ev { color: var(--ink-muted); }
+  .fit td.ev b { color: var(--ink); }
+  .en { font-style: normal; }
+  .say .es { display: block; margin-top: 0.55rem; font-size: 0.82rem; color: var(--ink-muted); font-style: italic; }
+  .facts { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .facts li { display: flex; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  .facts li b { flex: none; width: 9.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent); padding-top: 0.2em; }
+  .facts li span { color: var(--ink-muted); }
+  @media print {
+    .fit { font-size: 8.6pt; } .fit td.st { font-size: 7.4pt; }
+    .fit tr { break-inside: avoid; page-break-inside: avoid; }
+    .facts li { font-size: 9pt; break-inside: avoid; }
+    .say .es { font-size: 8.2pt; }
+  }
+</style>
+<style>
+  .f { font-family: var(--mono); font-size: 0.9em; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap; }
+  .fx { font-family: var(--mono); font-size: 0.88rem; background: var(--surface-2); padding: 0.7rem 0.9rem; margin: 0.6rem 0; line-height: 1.6; overflow-x: auto; }
+  .ex { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--good); padding: 0.9rem 1.1rem; margin: 0.8rem 0; font-size: 0.94rem; }
+  .ex .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--good); display: block; margin-bottom: 0.35rem; font-weight: 600; }
+  .ans { color: var(--ink-muted); font-size: 0.9rem; }
+  table.t { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+  table.t th, table.t td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h3 { font-size: 1rem; margin: 1.5rem 0 0.4rem; }
+  ol.qs li { margin-bottom: 0.5rem; }
+  @media print { .fx { font-size: 8.4pt; } .ex { break-inside: avoid; } h3 { break-after: avoid; } }
+</style>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Revolut · ML fundamentals programme · Week 1 · Module 1 of 4</p>
+    <h1>Probability &amp; statistics for ML</h1>
+    <p class="sub">A refresh, applied to the problems Revolut cares about — fraud, credit, disputes, A/B tests. Read once, then answer the questions at the end <b>out loud, in English</b>.</p>
+  </header>
+
+  <div class="objective">
+    <span class="lab">What this module is for</span>
+    <p>The “ML basis: maths + statistics” round. Not to make you a statistician — to make sure that when they say <em>“the model is overconfident”</em>, <em>“the lift isn't significant”</em> or <em>“precision at that recall”</em>, you know exactly what they mean and can say it back with a number.</p>
+    <p class="small">Rule for the whole programme: every concept gets three things — the idea in plain words, the formula (so a symbol never scares you), and one Revolut-shaped example. Nothing else.</p>
+  </div>
+
+  <!-- 00 notation -->
+  <section>
+    <h2><span class="n">00</span>Notation refresh — the symbols you'll see</h2>
+    <p class="lede">Ten minutes. If you can read these, you can read any formula in the interview.</p>
+    <table class="t">
+      <thead><tr><th>Symbol</th><th>Read it as</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><span class="f">Σ</span></td><td>“add up”</td><td><span class="f">Σ xᵢ</span> for i = 1…n = x₁ + x₂ + … + xₙ. <span class="f">(1/n) Σ xᵢ</span> is the mean.</td></tr>
+        <tr><td><span class="f">Π</span></td><td>“multiply together”</td><td>Probability of independent events happening all together.</td></tr>
+        <tr><td><span class="f">log</span></td><td>“how many times do I multiply the base to get this”</td><td>log turns products into sums: <span class="f">log(a·b) = log a + log b</span>. ML uses it constantly because probabilities multiplied get tiny; their logs add nicely. Natural log (base e ≈ 2.718) unless stated.</td></tr>
+        <tr><td><span class="f">e^x</span> / <span class="f">exp(x)</span></td><td>the inverse of log</td><td><span class="f">exp(log x) = x</span>. Shows up in the sigmoid and in growth.</td></tr>
+        <tr><td><span class="f">P(A)</span></td><td>probability of A</td><td>Between 0 and 1. <span class="f">P(fraud) = 0.002</span> = 0.2 % of transactions.</td></tr>
+        <tr><td><span class="f">P(A | B)</span></td><td>probability of A <b>given</b> B</td><td><span class="f">P(fraud | new device)</span>: fraud rate among transactions from a new device.</td></tr>
+        <tr><td><span class="f">E[X]</span></td><td>expected value = long-run average</td><td>Expected loss per transaction.</td></tr>
+        <tr><td><span class="f">Var(X), σ²</span> · <span class="f">σ</span></td><td>variance · standard deviation</td><td>How spread out values are. σ is in the same units as X.</td></tr>
+        <tr><td><span class="f">x</span> (bold) / <span class="f">x ∈ ℝᵈ</span></td><td>a vector of d numbers</td><td>An embedding: a customer as a list of, say, 256 numbers.</td></tr>
+        <tr><td><span class="f">w · x</span> or <span class="f">wᵀx</span></td><td>dot product</td><td><span class="f">w₁x₁ + w₂x₂ + …</span>: a weighted sum. Every linear model is this.</td></tr>
+        <tr><td><span class="f">argmax / argmin</span></td><td>“the value that makes this biggest / smallest”</td><td>Training = <span class="f">argmin</span> of the loss over the weights.</td></tr>
+        <tr><td><span class="f">ŷ</span> (y-hat)</td><td>the model's prediction of y</td><td>y is the truth (defaulted or not), ŷ the prediction.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 01 probability -->
+  <section>
+    <h2><span class="n">01</span>Probability — the four rules you need</h2>
+
+    <h3>1 · Probability is a long-run frequency</h3>
+    <p><span class="f">P(A)</span> = the fraction of times A happens if you repeat the situation many times. Always between 0 and 1; all outcomes together sum to 1.</p>
+    <div class="ex"><span class="lab">Revolut</span>If 2 of every 1,000 card transactions are fraudulent, <span class="f">P(fraud) = 0.002</span>. This number — the <b>base rate</b> — is the single most important number in any fraud or default problem, and the one people forget.</div>
+
+    <h3>2 · Independence and the multiplication rule</h3>
+    <p>Two events are <b>independent</b> if one tells you nothing about the other. Then <span class="f">P(A and B) = P(A) · P(B)</span>. If they are <em>not</em> independent: <span class="f">P(A and B) = P(A) · P(B | A)</span>.</p>
+    <div class="ex"><span class="lab">Revolut</span>“New device” and “fraud” are <em>not</em> independent — fraud is much more common on new devices. That dependence is exactly what a model learns. Treating dependent things as independent is the classic naive mistake (it's literally why “Naive Bayes” is called naive).</div>
+
+    <h3>3 · Conditional probability</h3>
+    <div class="fx">P(A | B) = P(A and B) / P(B)</div>
+    <p>“Among the cases where B is true, how often is A true.” Every model output is a conditional probability: <span class="f">P(default | what we know about this customer)</span>.</p>
+
+    <h3>4 · Bayes' theorem — updating a belief with evidence</h3>
+    <div class="fx">P(A | B) = P(B | A) · P(A) / P(B)</div>
+    <p>In words: <em>what I believed before (P(A), the prior)</em> × <em>how well the evidence fits (P(B|A))</em>, scaled by <em>how common the evidence is overall (P(B))</em>.</p>
+    <div class="ex"><span class="lab">Revolut — the example to know by heart</span>
+      A fraud model flags a transaction. The model catches 90 % of fraud (<span class="f">P(flag | fraud) = 0.9</span>) and wrongly flags 2 % of legitimate transactions (<span class="f">P(flag | legit) = 0.02</span>). Fraud base rate 0.2 %. <b>If a transaction is flagged, what's the probability it's actually fraud?</b>
+      <div class="fx">P(flag) = 0.9·0.002 + 0.02·0.998 = 0.0018 + 0.01996 = 0.02176<br>P(fraud | flag) = 0.9·0.002 / 0.02176 ≈ 0.083</div>
+      <b>Only ~8 %.</b> A “90 % accurate” detector is wrong 92 % of the time it fires, because fraud is rare and the 2 % false-alarm rate on a huge legit population swamps it. This is why <b>precision</b> (next module) and the <b>base rate</b> matter more than “accuracy” in fraud, AML and credit. If you can explain this on a whiteboard, you've passed half the round.</div>
+  </section>
+
+  <!-- 02 random variables -->
+  <section>
+    <h2><span class="n">02</span>Random variables, expectation, variance</h2>
+    <p>A <b>random variable</b> is a number whose value depends on chance: the amount of a transaction, whether a customer defaults (0/1), the number of disputes a merchant gets this month.</p>
+
+    <h3>Expected value — the long-run average</h3>
+    <div class="fx">E[X] = Σ xᵢ · P(xᵢ)     (discrete)      E[X] = ∫ x · p(x) dx     (continuous)</div>
+    <div class="ex"><span class="lab">Revolut</span>Expected loss on a €1,000 loan with 4 % default probability and 60 % loss if default: <span class="f">E[loss] = 0.04 · 0.6 · 1000 = €24</span>. That's the number the interest rate has to cover — exactly what your lender model was for: getting P(default) per customer so the price per customer is right.</div>
+
+    <h3>Variance and standard deviation — how spread out</h3>
+    <div class="fx">Var(X) = E[(X − E[X])²]        σ = √Var(X)</div>
+    <p>σ is in the same units as X, so it's the one you quote. Roughly: for many well-behaved variables, ~68 % of values fall within ±1σ of the mean, ~95 % within ±2σ.</p>
+    <div class="ex"><span class="lab">Revolut</span>A customer's typical spend is €40 ± €25 (mean ± σ). A €300 transaction is more than 10σ away — “unusual for this customer”. That z-score idea, <span class="f">z = (x − mean) / σ</span>, is the simplest anomaly detector, and it's what PRAGMA does in a much richer way: “how far is this event from what this customer normally does”.</div>
+
+    <h3>Covariance and correlation — do two things move together</h3>
+    <div class="fx">corr(X, Y) = Cov(X, Y) / (σₓ σᵧ)     between −1 and +1</div>
+    <p>Correlation ≠ causation — say it before they do. And correlation only measures <em>linear</em> relationships; two variables can be strongly related with correlation ≈ 0.</p>
+  </section>
+
+  <!-- 03 distributions -->
+  <section>
+    <h2><span class="n">03</span>Distributions — the five you'll meet</h2>
+    <table class="t">
+      <thead><tr><th>Distribution</th><th>Models</th><th>Revolut example</th><th>Key facts</th></tr></thead>
+      <tbody>
+        <tr><td><b>Bernoulli</b></td><td>one yes/no trial with probability p</td><td>Does this customer default? Is this transaction fraud?</td><td>mean p, variance p(1−p). The target of every binary classifier.</td></tr>
+        <tr><td><b>Binomial</b></td><td>number of “yes” in n independent trials</td><td>How many of 1,000 loans default?</td><td>mean np, variance np(1−p). Basis of A/B test maths.</td></tr>
+        <tr><td><b>Poisson</b></td><td>count of events in a time window when events are rare and independent</td><td>Disputes per merchant per month; logins per hour</td><td>mean = variance = λ. If variance ≫ mean, something's clustered (e.g. a fraud ring).</td></tr>
+        <tr><td><b>Normal (Gaussian)</b></td><td>a symmetric bell; sums/averages of many things</td><td>Sample means of anything (see CLT); model errors, often</td><td>68 / 95 / 99.7 % within 1 / 2 / 3 σ. <em>Transaction amounts are NOT normal</em> — they're heavy-tailed.</td></tr>
+        <tr><td><b>Log-normal / heavy-tailed</b></td><td>positive, skewed, rare huge values</td><td>Transaction amounts, customer balances, LTV</td><td>Mean is dragged up by whales; <b>quote the median</b> and percentiles. Take the log before modelling.</td></tr>
+      </tbody>
+    </table>
+    <div class="ex"><span class="lab">The trap they like</span>“Average transaction is €85.” With a heavy tail that can mean most people spend €20 and a few spend €5,000. Always ask: mean or median? What does the 95th percentile look like? Saying that in the interview signals you've handled real data.</div>
+  </section>
+
+  <!-- 04 sampling -->
+  <section>
+    <h2><span class="n">04</span>Sampling, the Central Limit Theorem, confidence intervals</h2>
+
+    <h3>Why you can trust an average from a sample</h3>
+    <p><b>Central Limit Theorem (CLT):</b> take a sample of n values from almost any distribution and compute the mean. Do it many times: the means are normally distributed around the true mean, with standard deviation</p>
+    <div class="fx">standard error = σ / √n</div>
+    <p>Two consequences you must be able to say: (1) the sample mean is a good estimate of the true mean; (2) <b>precision improves with √n, not n</b> — to halve the error you need <em>four</em> times the data.</p>
+
+    <h3>Confidence interval</h3>
+    <div class="fx">95 % CI ≈ mean ± 1.96 · σ / √n</div>
+    <div class="ex"><span class="lab">Revolut</span>You measure a 30 % dispute auto-resolution rate on 400 cases. For a proportion, <span class="f">σ = √(p(1−p)) = √(0.3·0.7) ≈ 0.46</span>, so <span class="f">SE = 0.46 / √400 = 0.023</span>, and the 95 % CI is <b>30 % ± 4.5 %</b>. If someone asks “is it 30 or 32?”, the honest answer is “somewhere between 25 and 35 — we need more cases to say more.”</div>
+
+    <h3>Bias vs. noise in sampling</h3>
+    <p>More data fixes <b>noise</b> (random error). It does <em>not</em> fix <b>bias</b> (systematic error: your sample isn't like the population). Classic ML biases: <em>survivorship</em> (you only see loans you approved — you never learn what the rejected ones would have done), <em>selection</em> (the pilot ran on your best customers), <em>label leakage</em> (the training data contains the answer). Naming survivorship bias in a credit context is worth a lot in this round.</p>
+  </section>
+
+  <!-- 05 hypothesis tests -->
+  <section>
+    <h2><span class="n">05</span>Hypothesis tests, p-values, A/B tests</h2>
+
+    <h3>The logic</h3>
+    <p>You want to know if a change had an effect. You assume it didn't (the <b>null hypothesis, H₀</b>) and ask: <em>if H₀ were true, how surprising is the data I got?</em> That surprise is the <b>p-value</b>: the probability of seeing a result at least this extreme <em>if there is no real effect</em>. Small p (conventionally &lt; 0.05) → reject H₀ → “statistically significant”.</p>
+    <p><b>What a p-value is NOT:</b> it is not the probability that H₀ is true, and it is not the size of the effect. A tiny effect on a huge sample is “significant” and useless; a big effect on a small sample is “not significant” and maybe real. Always ask for the <b>effect size and its confidence interval</b>, not just the p.</p>
+
+    <h3>The two errors</h3>
+    <table class="t">
+      <thead><tr><th></th><th>Reality: no effect</th><th>Reality: real effect</th></tr></thead>
+      <tbody>
+        <tr><td><b>You say “effect”</b></td><td><b>Type I error</b> (false positive), probability α (usually 5 %)</td><td>correct — “power” (usually target 80 %)</td></tr>
+        <tr><td><b>You say “no effect”</b></td><td>correct</td><td><b>Type II error</b> (false negative), probability β</td></tr>
+      </tbody>
+    </table>
+    <p>Same table as a fraud model's false positives / false negatives — it's the same maths. <b>Power</b> is the chance you detect a real effect; it depends on effect size, sample size and α. Under-powered tests are the #1 A/B mistake.</p>
+
+    <h3>A/B test, end to end</h3>
+    <ol class="qs">
+      <li><b>Metric</b> first (one primary, a few guardrails), and the <b>minimum effect worth detecting</b> (e.g. +1 pp on resolution rate).</li>
+      <li><b>Sample size</b> from that: roughly <span class="f">n per group ≈ 16 · σ² / δ²</span> for 80 % power at α = 5 % (δ = the effect you want to detect). For a proportion, σ² = p(1−p).</li>
+      <li><b>Randomise</b> properly (by customer, not by session), run for full weekly cycles, <b>don't peek and stop early</b> — peeking inflates false positives.</li>
+      <li>Read: effect size, CI, p. Check guardrails. Then decide.</li>
+    </ol>
+    <div class="ex"><span class="lab">Revolut</span>Baseline auto-resolution 30 %; you want to detect a lift to 32 % (δ = 0.02). σ² = 0.3·0.7 = 0.21. <span class="f">n ≈ 16 · 0.21 / 0.0004 = 8,400 per group</span>. If disputes run at 2,000/day, that's ~8–9 days for both arms. If someone proposes “let's test on 300 cases”, you can now say why that can't work.</div>
+
+    <h3>Vocabulary to own</h3>
+    <ul class="tight">
+      <li><b>t-test</b>: compares two means. <b>Chi-square / z-test for proportions</b>: compares two rates (most A/B tests). You don't need to compute them — know which is which.</li>
+      <li><b>Multiple comparisons</b>: test 20 metrics at α = 5 % and one will be “significant” by luck. Pre-register the primary metric.</li>
+      <li><b>Novelty effect</b>: a new feature spikes then fades. Run long enough.</li>
+      <li><b>Shadow mode</b> (what you already use): the system decides, humans still decide, you compare — the safest first test for automations.</li>
+    </ul>
+  </section>
+
+  <!-- 06 cheat sheet -->
+  <section>
+    <h2><span class="n">06</span>One-page cheat sheet</h2>
+    <ul class="facts">
+      <li><b>Base rate</b><span>How common the thing is before any evidence. Fraud ≈ 0.1–0.5 %, default ≈ 2–10 %. Everything downstream depends on it.</span></li>
+      <li><b>Bayes</b><span>posterior ∝ likelihood × prior. Rare events + imperfect detectors = most alerts are false. Hence precision.</span></li>
+      <li><b>E[X], σ</b><span>Average and spread. Quote σ, not variance. z = (x − mean)/σ = “how unusual”.</span></li>
+      <li><b>Heavy tails</b><span>Money is not normal. Medians and percentiles; log-transform.</span></li>
+      <li><b>CLT</b><span>Averages are normal; error shrinks with √n. 4× data → 2× precision.</span></li>
+      <li><b>95 % CI</b><span>mean ± 1.96 · σ/√n. Say the interval, not the point.</span></li>
+      <li><b>p-value</b><span>P(data this extreme | no effect). Not P(no effect). Effect size + CI &gt; p.</span></li>
+      <li><b>Power</b><span>Chance to detect a real effect; target 80 %. n ≈ 16σ²/δ² per group.</span></li>
+      <li><b>Bias vs. noise</b><span>More data fixes noise, never bias. Survivorship bias in credit: you only see approved loans.</span></li>
+      <li><b>A/B hygiene</b><span>One primary metric, pre-set sample size, randomise by customer, full weeks, no peeking.</span></li>
+    </ul>
+  </section>
+
+  <!-- 07 questions -->
+  <section>
+    <h2><span class="n">07</span>Ten questions — answer out loud, in English, then check</h2>
+    <ol class="qs">
+      <li>A model has 95 % accuracy on fraud detection. Why might that be useless? What would you ask for instead?</li>
+      <li>Fraud base rate 0.5 %; detector catches 95 % of fraud and false-alarms on 1 % of legit. A transaction is flagged: probability it's fraud?</li>
+      <li>Average customer balance is €2,300, median €410. What does that tell you, and which would you put on a dashboard?</li>
+      <li>You have 100 data points and a standard error of 5. How many points do you need to get the standard error to 2.5?</li>
+      <li>An A/B test shows p = 0.03 and a lift of 0.1 pp in conversion. Ship it?</li>
+      <li>Your credit model is trained only on loans that were approved. What's the problem, and what's it called?</li>
+      <li>Explain Type I and Type II error using a fraud alert as the example.</li>
+      <li>Why shouldn't you stop an A/B test the first day it shows significance?</li>
+      <li>Disputes per merchant per month: mean 4, variance 40. What might that suggest?</li>
+      <li>What's the difference between P(flag | fraud) and P(fraud | flag), and which one does the business care about?</li>
+    </ol>
+
+    <h3>Answers (check after, not before)</h3>
+    <ol class="qs ans">
+      <li>If fraud is 0.5 %, a model that says “never fraud” is 99.5 % accurate. Accuracy is meaningless with imbalanced classes. Ask for precision and recall (or PR-AUC) at the operating threshold, and the base rate.</li>
+      <li>P(flag) = 0.95·0.005 + 0.01·0.995 = 0.00475 + 0.00995 = 0.0147. P(fraud | flag) = 0.00475 / 0.0147 ≈ <b>32 %</b>. Two out of three alerts are false.</li>
+      <li>Heavy right tail: a few very large balances drag the mean up; the typical customer has ~€410. Dashboard: median plus percentiles (p25/p75/p95); mean only for totals.</li>
+      <li>Error shrinks with √n. Halving it needs 4× the data: <b>400 points</b>.</li>
+      <li>Probably not: significant but tiny. Ask: is 0.1 pp worth the cost and complexity? What's the CI — does it include zero? Were there multiple metrics tested? Effect size decides, not p.</li>
+      <li><b>Survivorship / selection bias</b>: you never observe what rejected applicants would have done, so the model learns from a biased population and can't evaluate its own rejections. Mitigations: reject inference, small random approval samples, external data.</li>
+      <li>Type I = flagging a legitimate transaction as fraud (false positive; annoys a customer). Type II = missing a real fraud (false negative; loses money). The threshold trades one for the other.</li>
+      <li>With repeated peeking the chance of a false “significant” somewhere along the way climbs far above 5 %. Fix the sample size in advance (or use sequential-testing methods designed for peeking).</li>
+      <li>Variance ≫ mean means the counts are not Poisson — they're over-dispersed: disputes are clustered on some merchants or some periods. Look for a ring, a broken merchant, or a bug.</li>
+      <li>P(flag | fraud) is recall (sensitivity): of real frauds, how many we catch. P(fraud | flag) is precision: of alerts, how many are real. Business cares about <em>both</em>, but ops teams live on precision (how many alerts are wasted) and losses depend on recall.</li>
+    </ol>
+  </section>
+
+  <p class="colophon">
+    Tomás Zanchetti · Revolut ML fundamentals programme · Module 1 — Probability &amp; statistics · 22/09/2026<br>
+    Next: Module 2 — What a model is: regression, overfitting, regularisation, and the metrics (precision, recall, ROC / PR-AUC, calibration).
+  </p>
+
+</div>
+</body>
+</html>
