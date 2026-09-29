@@ -19,7 +19,18 @@ Confirmed 29/09. Syllabus from Revolut, verbatim: **(1) Maths** — Normal, Bern
 
 Modules 3 (ML design) and 4 (problem solving) move to after 8/10.
 
-## Track A — Theory (one PDF per module, in `theory/`)
+## Track A — Theory: four modules, one per Revolut topic (rebuilt 29/09, `theory/`)
+
+Decision 29/09: one module per topic, from zero upwards, concepts shown in real Revolut-shaped cases. Each section = idea in plain words · formula · example · 30-second answer · exercises; answers at the back. The first draft (`theory/_v1/`) is kept for reference only.
+
+| # | Module | Revolut topic | Status |
+|---|---|---|---|
+| 1 | **Probability** — rules, random variables, Bernoulli · Binomial · Poisson · Normal · heavy tails | 2 | ✅ `theory/module-1/Module 1 - Probability.pdf` (29/09) |
+| 2 | **Statistics** — population vs. sample, bias (all kinds), sampling, CLT, confidence intervals, tests, p-values, power, A/B end to end | 3 | ⏳ 30/09 |
+| 3 | **Maths for ML** — what a model is, loss, bias–variance, under/overfitting, validation, leakage | 1 | ⏳ 1/10 |
+| 4 | **The models** — linear/logistic regression, regularisation, metrics, kNN, naive Bayes, trees, random forest, gradient boosting, SVM, neural nets, k-means — pros/cons and when | 4 | ⏳ 2/10 |
+
+## Track A (old plan, superseded) — Theory (one PDF per module, in `theory/`)
 
 | # | Module | Content | Status |
 |---|---|---|---|

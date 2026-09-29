@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Module 1 — Probability</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+</style>
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EDEF;
+    --ink: #131A1F;
+    --ink-muted: #55646D;
+    --ink-faint: #82949E;
+    --rule: #D5DFE3;
+    --rule-strong: #B3C2C9;
+    --accent: #2B3FA8;
+    --accent-soft: #E6E9F7;
+    --on-accent: #FFFFFF;
+    --good: #1F6B4E;
+    --good-soft: #E2F0E9;
+    --bad: #9E3628;
+    --bad-soft: #F7E7E4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1417;
+      --surface: #151D21;
+      --surface-2: #1B252A;
+      --ink: #E6EDF0;
+      --ink-muted: #9AA9B1;
+      --ink-faint: #74858D;
+      --rule: #232F35;
+      --rule-strong: #35454C;
+      --accent: #7DBDD6;
+      --accent-soft: #16282F;
+      --on-accent: #0E1417;
+      --good: #74C7A0;
+      --good-soft: #132521;
+      --bad: #E4907E;
+      --bad-soft: #2A1A17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1417;
+    --surface: #151D21;
+    --surface-2: #1B252A;
+    --ink: #E6EDF0;
+    --ink-muted: #9AA9B1;
+    --ink-faint: #74858D;
+    --rule: #232F35;
+    --rule-strong: #35454C;
+    --accent: #7DBDD6;
+    --accent-soft: #16282F;
+    --on-accent: #0E1417;
+    --good: #74C7A0;
+    --good-soft: #132521;
+    --bad: #E4907E;
+    --bad-soft: #2A1A17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 1.15rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  p { margin: 0 0 0.8em; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 3rem 0 1.5rem;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 5.5vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- objective banner ---------- */
+
+  .objective {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 1.35rem 1.4rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .objective .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .objective p { font-size: 1.05rem; line-height: 1.45; font-weight: 600; }
+  .objective .small { font-size: 0.88rem; font-weight: 400; opacity: 0.92; margin-top: 0.6rem; }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 2.75rem; }
+
+  h2 {
+    font-size: 1.18rem;
+    letter-spacing: -0.012em;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  h2 .n {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--ink-muted); font-size: 0.93rem; margin: 0.9rem 0 0; }
+
+  /* ---------- cards ---------- */
+
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .q .ask {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 0.55rem;
+    line-height: 1.35;
+  }
+
+  .q .real {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+    text-transform: none;
+  }
+  .q .real b {
+    display: block;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.28rem;
+    font-weight: 600;
+  }
+
+  .say {
+    background: var(--good-soft);
+    border-left: 2px solid var(--good);
+    padding: 0.85rem 1rem;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+  }
+  .say em { color: var(--ink-muted); font-style: italic; }
+
+  .trap {
+    font-size: 0.86rem;
+    color: var(--bad);
+    line-height: 1.5;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .trap b {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    flex: none;
+    padding-top: 0.24em;
+  }
+
+  ul.tight { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.35rem; font-size: 0.94rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  /* ---------- callout ---------- */
+
+  .call {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 1.1rem 1.25rem;
+    margin: 1.15rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+  .call .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .call b { color: var(--ink); }
+
+  /* ---------- never list ---------- */
+
+  .never {
+    background: var(--bad-soft);
+    border: 1px solid var(--bad);
+    padding: 1.15rem 1.3rem;
+    margin-top: 1rem;
+  }
+  .never ol { margin: 0; padding-left: 1.2rem; }
+  .never li {
+    margin-bottom: 0.55rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .never li:last-child { margin-bottom: 0; }
+  .never li b { color: var(--bad); }
+
+  /* ---------- pitch ---------- */
+
+  .pitch {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    padding: 1.3rem 1.4rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  .pitch .beat {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin: 1.1rem 0 0.35rem;
+    font-weight: 600;
+  }
+  .pitch .beat:first-child { margin-top: 0; }
+
+  /* ---------- checklist ---------- */
+
+  .checks { margin-top: 1rem; border-top: 1px solid var(--rule); }
+  .check {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .check .box {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--rule-strong);
+    margin-top: 0.24em;
+  }
+  .check .txt { font-size: 0.94rem; line-height: 1.5; color: var(--ink-muted); }
+  .check .txt b { color: var(--ink); }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--rule-strong);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+
+<style>
+  /* ---------- print ---------- */
+  @page { size: A4; margin: 13mm 13mm 15mm; }
+
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.4pt;
+      line-height: 1.45;
+    }
+    body { padding: 0; }
+    .wrap { max-width: none; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .masthead { padding: 0 0 0.7rem; }
+    h1 { font-size: 22pt; }
+    .sub { font-size: 9.5pt; }
+    .objective { margin-top: 0.9rem; padding: 0.85rem 1rem; }
+    .objective p { font-size: 11pt; }
+    .objective .small { font-size: 9pt; }
+
+    section { padding-top: 1.25rem; }
+    h2 { font-size: 12.5pt; break-after: avoid; page-break-after: avoid; }
+    .lede { font-size: 9.2pt; margin-top: 0.5rem; }
+
+    .q, .never, .call, .objective {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* prosa: puede partirse entre páginas sin romper la lectura */
+    .pitch, .checks { break-inside: auto; page-break-inside: auto; }
+    .pitch .beat { break-after: avoid; page-break-after: avoid; }
+    .check { break-inside: avoid; page-break-inside: avoid; }
+
+    .q { padding: 0.8rem 0.9rem 0.85rem; margin-top: 0.65rem; }
+    .q .ask { font-size: 10.6pt; }
+    .q .real { font-size: 7.6pt; }
+    .say { font-size: 9.4pt; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+    .trap { font-size: 8.6pt; }
+    .pitch { font-size: 10pt; padding: 0.9rem 1rem; }
+    ul.tight li, .never li, .check .txt { font-size: 9.4pt; }
+
+    .colophon { margin-top: 1.6rem; font-size: 8pt; }
+  }
+</style>
+</head>
+<style>
+  /* ---------- fit matrix (nuevo en esta hoja) ---------- */
+  .fit { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .fit th, .fit td { text-align: left; vertical-align: top; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .fit th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); }
+  .fit td.st { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; font-weight: 600; }
+  .ok { color: var(--good); } .mid { color: #9A6B12; } .no { color: var(--bad); }
+  .fit td.req { font-weight: 600; width: 27%; }
+  .fit td.ev { color: var(--ink-muted); }
+  .fit td.ev b { color: var(--ink); }
+  .en { font-style: normal; }
+  .say .es { display: block; margin-top: 0.55rem; font-size: 0.82rem; color: var(--ink-muted); font-style: italic; }
+  .facts { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .facts li { display: flex; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  .facts li b { flex: none; width: 9.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent); padding-top: 0.2em; }
+  .facts li span { color: var(--ink-muted); }
+  @media print {
+    .fit { font-size: 8.6pt; } .fit td.st { font-size: 7.4pt; }
+    .fit tr { break-inside: avoid; page-break-inside: avoid; }
+    .facts li { font-size: 9pt; break-inside: avoid; }
+    .say .es { font-size: 8.2pt; }
+  }
+</style>
+<style>
+  .f { font-family: var(--mono); font-size: 0.9em; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap; }
+  .fx { font-family: var(--mono); font-size: 0.88rem; background: var(--surface-2); padding: 0.7rem 0.9rem; margin: 0.6rem 0; line-height: 1.6; overflow-x: auto; }
+  .ex { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--good); padding: 0.9rem 1.1rem; margin: 0.8rem 0; font-size: 0.94rem; }
+  .ex .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--good); display: block; margin-bottom: 0.35rem; font-weight: 600; }
+  .drill { background: var(--accent-soft); border: 1px solid var(--rule-strong); padding: 0.9rem 1.1rem; margin: 1rem 0; font-size: 0.94rem; }
+  .drill .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.4rem; font-weight: 600; }
+  .drill ol { margin: 0; padding-left: 1.2rem; } .drill li { margin-bottom: 0.4rem; }
+  .ans { color: var(--ink-muted); font-size: 0.9rem; }
+  .ans li { margin-bottom: 0.45rem; }
+  table.t { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+  table.t th, table.t td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h3 { font-size: 1.02rem; margin: 1.6rem 0 0.4rem; }
+  h4 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; color: var(--ink); }
+  .say30 { border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.6rem 0; font-size: 0.92rem; background: var(--surface); }
+  .say30 b { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .part { margin-top: 3rem; padding: 1rem 1.2rem; background: var(--accent); color: var(--on-accent); }
+  .part .k { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; display: block; }
+  .part h2 { border: 0; margin: 0.2rem 0 0; padding: 0; color: var(--on-accent); font-size: 1.4rem; }
+  .part p { margin: 0.4rem 0 0; font-size: 0.92rem; opacity: 0.95; }
+  @media print { .fx { font-size: 8.4pt; } .ex, .drill, .say30 { break-inside: avoid; } h3, h4 { break-after: avoid; } .part { break-before: page; } }
+</style>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Revolut · Machine Learning 1 (Basics) · 8 October 2026 · Module 1 of 4</p>
+    <h1>Module 1 — Probability</h1>
+    <p class="sub">Four modules, one per Revolut topic, from zero upwards: <b>1 Probability</b> (this one: rules, random variables, Bernoulli · Binomial · Poisson · Normal) → <b>2 Statistics</b> (bias, significance, A/B) → <b>3 Maths for ML</b> (bias–variance, validation) → <b>4 The models</b> (pros and cons). Every section: the idea in plain words, the formula, a Revolut-shaped example, a 30-second answer, exercises. Answers at the back.</p>
+  </header>
+
+  <div class="objective">
+    <span class="lab">How to use this</span>
+    <p>Read a section, close the PDF, say the 30-second answer out loud in English, then do the exercises. Only then check the answers. One module per day.</p>
+    <p class="small">The interview is one hour of <em>breadth</em>. The goal is not to be deep anywhere; it is to have a clear, correct, short answer to twenty basic questions and to say "I haven't used that, but I know what it's for" for the rest. Everything here is at that level. Where a topic goes deeper than the round needs, it says so.</p>
+  </div>
+
+  <!-- ============================================================ PART 0 -->
+  <section>
+    <h2><span class="n">00</span>Reading a formula — ten symbols</h2>
+    <table class="t">
+      <thead><tr><th>Symbol</th><th>Read it as</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><span class="f">Σ</span></td><td>add up</td><td><span class="f">Σ xᵢ</span> = x₁ + x₂ + … + xₙ · the mean is <span class="f">(1/n) Σ xᵢ</span></td></tr>
+        <tr><td><span class="f">Π</span></td><td>multiply together</td><td>probability that several independent things all happen</td></tr>
+        <tr><td><span class="f">P(A)</span> · <span class="f">P(A | B)</span></td><td>probability of A · probability of A given B</td><td><span class="f">P(default | late last month) = 0.34</span></td></tr>
+        <tr><td><span class="f">E[X]</span></td><td>expected value: long-run average of X</td><td>expected loss per loan</td></tr>
+        <tr><td><span class="f">Var(X)</span> · <span class="f">σ</span></td><td>variance · standard deviation (σ = √Var)</td><td>how spread out the values are; σ is in the units of X</td></tr>
+        <tr><td><span class="f">μ</span> · <span class="f">x̄</span></td><td>true (population) mean · sample mean</td><td>μ is what you want; x̄ is what you can compute</td></tr>
+        <tr><td><span class="f">log</span> · <span class="f">exp</span></td><td>logarithm · its inverse (e^x)</td><td><span class="f">log(a·b) = log a + log b</span> — turns products into sums</td></tr>
+        <tr><td><span class="f">ŷ</span></td><td>"y-hat": the model's prediction of y</td><td>y = defaulted (1/0), ŷ = predicted probability</td></tr>
+        <tr><td><span class="f">w · x</span></td><td>dot product = weighted sum</td><td><span class="f">w₁x₁ + w₂x₂ + … + wₙxₙ</span> — every linear model is this</td></tr>
+        <tr><td><span class="f">argmin</span></td><td>the value that makes this smallest</td><td>training = <span class="f">argmin</span> of the loss over the weights</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ PART A -->
+  <div class="part">
+    <span class="k">Revolut topic 2 · "Probability — Bernoulli, Binomial, Gaussian distributions, random variables"</span>
+    <h2>Probability — rules, random variables, distributions</h2>
+    <p>Three sections: A1 the rules (recap — you own these), A2 random variables, A3 the five distributions. About two hours including exercises.</p>
+  </div>
+
+  <section>
+    <h2><span class="n">A1</span>The rules of probability (you own these — a one-page recap)</h2>
+    <ul class="tight">
+      <li><b>Probability</b> = long-run fraction of times something happens. Between 0 and 1. All outcomes sum to 1.</li>
+      <li><b>AND multiplies:</b> <span class="f">P(A and B) = P(A) · P(B | A)</span>. If A and B are independent, <span class="f">P(B | A) = P(B)</span> and it's just <span class="f">P(A) · P(B)</span>. "And" always shrinks.</li>
+      <li><b>OR adds:</b> <span class="f">P(A or B) = P(A) + P(B) − P(A and B)</span>. Subtract the overlap so it isn't counted twice.</li>
+      <li><b>Conditional:</b> <span class="f">P(A | B) = P(A and B) / P(B)</span>. "B is now the whole world; what fraction of it is A?"</li>
+      <li><b>Bayes:</b> <span class="f">P(A | B) = P(B | A) · P(A) / P(B)</span>. Flips the condition. Prior × likelihood ÷ evidence = posterior.</li>
+      <li><b>Complement:</b> <span class="f">P(not A) = 1 − P(A)</span>. Often the easiest route: P(at least one) = 1 − P(none).</li>
+      <li><b>A feature is useful when</b> <span class="f">P(target | feature) ≠ P(target)</span>. That inequality is what a model learns.</li>
+    </ul>
+    <div class="say30"><b>30 seconds — "explain Bayes' theorem"</b>"It lets you flip a conditional probability. A fraud model that catches 90 % of fraud gives you P(flag | fraud); the business needs P(fraud | flag). Bayes multiplies the 90 % by the base rate and divides by how often the model fires overall. With a 0.2 % base rate and a 2 % false-alarm rate, P(fraud | flag) is about 8 % — most alerts are false, because the rare event is swamped by the small error on the huge legitimate population."</div>
+    <div class="drill"><span class="lab">Exercises A1</span><ol>
+      <li>Two independent checks each fail 5 % of the time. Probability that at least one fails?</li>
+      <li>P(A) = 0.3, P(B) = 0.5, P(A and B) = 0.1. Are A and B independent? What is P(A | B)?</li>
+      <li>1 % of customers are fraudsters. A model flags 80 % of fraudsters and 5 % of honest customers. A customer is flagged — probability they're a fraudster? Do the 10,000-customer table first.</li>
+    </ol></div>
+  </section>
+
+  <section>
+    <h2><span class="n">A2</span>Random variables — a number that depends on chance</h2>
+    <p>A <b>random variable</b> is a quantity whose value is decided by a random process: the amount of the next transaction, whether a loan defaults (1 or 0), the number of logins tomorrow. Capital letters for the variable (X), small for a value it takes (x).</p>
+
+    <h3>Discrete vs. continuous</h3>
+    <table class="t">
+      <thead><tr><th></th><th>Discrete</th><th>Continuous</th></tr></thead>
+      <tbody>
+        <tr><td>Takes</td><td>separate values: 0, 1, 2, …</td><td>any value in a range: 12.37 €</td></tr>
+        <tr><td>Described by</td><td><b>PMF</b> — probability of each value, <span class="f">P(X = k)</span></td><td><b>PDF</b> — a density curve; probability = area under the curve. <span class="f">P(X = exactly 12.37)</span> is 0; you ask <span class="f">P(12 &lt; X &lt; 13)</span></td></tr>
+        <tr><td>Examples</td><td>defaults in a portfolio, disputes per month, heads in 10 flips</td><td>transaction amount, time until next login, height</td></tr>
+        <tr><td>Both have a</td><td colspan="2"><b>CDF</b> <span class="f">F(x) = P(X ≤ x)</span> — the running total. Percentiles come from it: the median is where F = 0.5.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Expected value — the long-run average</h3>
+    <div class="fx">discrete:   E[X] = Σ x · P(X = x)          continuous:   E[X] = ∫ x · f(x) dx</div>
+    <p>"Each value, weighted by how likely it is." It is a weighted average, not the most likely value and not the middle value.</p>
+    <div class="ex"><span class="lab">Revolut</span>A €1,000 loan: 96 % chance of full repayment (gain €80 interest), 4 % chance of default (lose €600). <span class="f">E[profit] = 0.96 · 80 + 0.04 · (−600) = 76.8 − 24 = €52.8</span>. Positive → the loan is worth making at that price. Pricing per customer = choosing the interest so that E[profit] is positive for <em>that customer's</em> P(default). That was your lender model.</div>
+
+    <h3>Two rules of expectation you should know</h3>
+    <ul class="tight">
+      <li><b>Linearity:</b> <span class="f">E[X + Y] = E[X] + E[Y]</span>, always — even if X and Y are dependent. <span class="f">E[aX] = a·E[X]</span>. So the expected loss of a portfolio = sum of the expected losses of the loans. No independence needed.</li>
+      <li><b>Products:</b> <span class="f">E[XY] = E[X]·E[Y]</span> only if independent.</li>
+    </ul>
+
+    <h3>Variance and standard deviation — how spread out</h3>
+    <div class="fx">Var(X) = E[(X − μ)²] = E[X²] − μ²          σ = √Var(X)</div>
+    <p>Variance is the average <em>squared</em> distance from the mean (squared so that + and − don't cancel). σ brings it back to the original units, so quote σ. Rules: <span class="f">Var(aX) = a² Var(X)</span>; <span class="f">Var(X + Y) = Var(X) + Var(Y)</span> <em>only if independent</em>.</p>
+    <div class="ex"><span class="lab">Revolut</span>Two portfolios with the same expected loss of €24 per loan. Portfolio A: every loan loses about €24. Portfolio B: most lose nothing, a few lose €5,000. Same mean, very different variance. Capital requirements, stress tests and "how bad can a bad month be" are all about variance, not the mean.</div>
+
+    <h3>Standardising: the z-score</h3>
+    <div class="fx">z = (x − μ) / σ        "how many standard deviations from the mean"</div>
+    <p>A z of 3 is "unusual" for most well-behaved variables; for a normal variable, only 0.3 % of values are beyond ±3. This is the simplest anomaly detector: a customer whose spend today is 8σ above their own mean.</p>
+
+    <h3>Covariance and correlation — do two variables move together</h3>
+    <div class="fx">Cov(X, Y) = E[(X − μₓ)(Y − μᵧ)]        corr(X, Y) = Cov(X, Y) / (σₓ σᵧ)   ∈ [−1, +1]</div>
+    <p>Correlation is covariance scaled to be unit-free. +1 = perfect straight line up; 0 = no <em>linear</em> relation (there can still be a curved one); −1 = perfect line down. Correlation is not causation: ice-cream sales and drownings both rise in summer.</p>
+
+    <div class="say30"><b>30 seconds — "what's a random variable, and what are expectation and variance?"</b>"A random variable is a number whose value depends on chance — a transaction amount, whether a loan defaults. Its expectation is its long-run average, each value weighted by its probability; its variance is the average squared distance from that mean, and the standard deviation is the square root, in the original units. Expectation tells you what to expect on average; variance tells you how wrong 'on average' can be. In credit, expected loss sets the price; variance sets the capital."</div>
+
+    <div class="drill"><span class="lab">Exercises A2</span><ol>
+      <li>A dispute costs €0 with probability 0.7, €20 with probability 0.25, €500 with probability 0.05. E[cost]? Which single value is most likely? Is E[cost] a value that ever actually occurs?</li>
+      <li>X has mean 10 and σ 2. What are the mean and σ of 3X? Of X + 5?</li>
+      <li>Two independent loans, each with variance of loss 100. Variance of the total loss? What if the two loans were to the same customer (perfectly dependent)?</li>
+      <li>A customer's daily spend: mean €40, σ €15. Today: €130. z-score? Would you call that unusual?</li>
+      <li>Correlation between two features is 0. Can they still be related? Give an example.</li>
+    </ol></div>
+  </section>
+
+  <section>
+    <h2><span class="n">A3</span>The distributions — the five you must know cold</h2>
+    <p class="lede">For each: what it models, its parameter(s), mean and variance, the shape, one Revolut example, and when <em>not</em> to use it. The interviewer will ask "what is X and when would you use it" — that's the whole question.</p>
+
+    <h3>1 · Bernoulli — one yes/no trial</h3>
+    <ul class="tight">
+      <li><b>Models:</b> a single event that either happens (1) or doesn't (0), with probability p.</li>
+      <li><b>Parameter:</b> p. <b>Mean:</b> p. <b>Variance:</b> p(1 − p) — largest at p = 0.5, tiny when p is near 0 or 1.</li>
+      <li><b>PMF:</b> <span class="f">P(X = 1) = p, P(X = 0) = 1 − p</span>.</li>
+      <li><b>Revolut:</b> does <em>this</em> transaction turn out to be fraud? does <em>this</em> customer default? The target of every binary classifier is a Bernoulli variable; a model's output ŷ is its estimate of p for that customer.</li>
+    </ul>
+
+    <h3>2 · Binomial — count of successes in n independent trials</h3>
+    <ul class="tight">
+      <li><b>Models:</b> the number of "yes" in n independent Bernoulli trials with the same p.</li>
+      <li><b>Parameters:</b> n, p. <b>Mean:</b> np. <b>Variance:</b> np(1 − p).</li>
+      <li><b>PMF:</b> <span class="f">P(X = k) = C(n, k) · pᵏ · (1 − p)ⁿ⁻ᵏ</span>, where <span class="f">C(n, k) = n! / (k!(n − k)!)</span> counts the ways to choose which k trials succeed.</li>
+      <li><b>Revolut:</b> of 1,000 loans with p = 4 %, how many default? Mean 40, σ = √(1000·0.04·0.96) ≈ 6.2. So 28–52 defaults is "normal"; 70 is not — something changed. Also: an A/B test's conversions per arm are binomial, which is where the A/B formulas come from.</li>
+      <li><b>Conditions:</b> fixed n, same p every trial, independence. If loans are correlated (same employer goes bankrupt), binomial <em>understates</em> the variance — a classic risk-model error.</li>
+    </ul>
+    <div class="ex"><span class="lab">Worked</span>5 transactions, each 10 % chance of being disputed. P(exactly 2 disputed) = C(5,2) · 0.1² · 0.9³ = 10 · 0.01 · 0.729 = <b>0.073</b>. P(at least one) = 1 − P(none) = 1 − 0.9⁵ = 1 − 0.590 = <b>0.41</b>.</div>
+
+    <h3>3 · Poisson — count of events in a window, when events are rare and independent</h3>
+    <ul class="tight">
+      <li><b>Models:</b> how many events occur in a fixed interval of time or space, when they happen independently at a constant average rate λ.</li>
+      <li><b>Parameter:</b> λ (the average count). <b>Mean:</b> λ. <b>Variance:</b> λ — the same number. That equality is the fingerprint.</li>
+      <li><b>PMF:</b> <span class="f">P(X = k) = e^(−λ) · λᵏ / k!</span></li>
+      <li><b>Revolut:</b> disputes per merchant per month; support tickets per hour; fraud attempts per day on a card. Capacity planning ("how many agents at 3 a.m.?") is Poisson.</li>
+      <li><b>Relation to binomial:</b> binomial with large n and small p ≈ Poisson with λ = np. That's why rare events (fraud among millions) are Poisson-shaped.</li>
+      <li><b>Diagnostic:</b> if the observed variance is much larger than the mean (<b>over-dispersion</b>), events aren't independent — they cluster: a fraud ring, a broken merchant, a bug. If variance ≪ mean, something is smoothing them.</li>
+    </ul>
+    <div class="ex"><span class="lab">Worked</span>A merchant averages 2 disputes a month. P(0 this month) = e^(−2) = <b>0.135</b>. P(≥ 5) — small: P(5) = e^(−2)·2⁵/120 = 0.036, and the tail beyond adds ~0.017, so ≈ <b>0.05</b>. Seeing 8 in a month is a 1-in-500 event → investigate.</div>
+
+    <h3>4 · Normal (Gaussian) — the bell curve</h3>
+    <ul class="tight">
+      <li><b>Models:</b> quantities that are the sum or average of many small independent effects. Symmetric, bell-shaped, thin tails.</li>
+      <li><b>Parameters:</b> μ (centre), σ (width). <b>Mean:</b> μ. <b>Variance:</b> σ².</li>
+      <li><b>PDF:</b> <span class="f">f(x) = (1 / (σ√(2π))) · exp(−(x − μ)² / (2σ²))</span> — you don't need to compute it; you need the rule below.</li>
+      <li><b>The 68 / 95 / 99.7 rule:</b> 68 % of values within ±1σ, 95 % within ±2σ (precisely 1.96σ), 99.7 % within ±3σ.</li>
+      <li><b>Standard normal:</b> μ = 0, σ = 1. Any normal becomes standard via the z-score. That's why tables and tests work with z.</li>
+      <li><b>Why it's everywhere:</b> the <b>Central Limit Theorem</b> (Part B): averages of anything become normal as the sample grows. So <em>sample means</em>, test statistics and many model errors are normal even when the raw data isn't.</li>
+      <li><b>Revolut:</b> the average transaction size of a large sample of customers; the error of a well-behaved regression; a test statistic in an A/B test. <b>Not</b> individual transaction amounts, balances, incomes — those are heavy-tailed.</li>
+      <li><b>How to check normality:</b> histogram; Q-Q plot (points on the diagonal = normal); mean ≈ median; skewness ≈ 0. Formal tests (Shapiro–Wilk) exist but reject everything at large n — use the plots.</li>
+    </ul>
+    <div class="ex"><span class="lab">Worked</span>Average session length is normal with μ = 6 min, σ = 2. P(session &gt; 10 min)? z = (10 − 6)/2 = 2 → beyond +2σ is 2.5 % (the 95 % rule leaves 5 % in both tails, 2.5 % each). P(4 &lt; X &lt; 8) = within ±1σ = <b>68 %</b>.</div>
+
+    <h3>5 · Heavy-tailed / log-normal — money</h3>
+    <ul class="tight">
+      <li><b>Models:</b> positive quantities where most values are small and a few are enormous: transaction amounts, balances, income, LTV, city sizes.</li>
+      <li><b>Log-normal:</b> X is log-normal if log(X) is normal. Right-skewed; mean &gt; median; the mean is dragged up by the tail.</li>
+      <li><b>What to do:</b> quote the <b>median and percentiles</b>, not the mean; take <span class="f">log(x)</span> before modelling or before a t-test; be suspicious of any "average" of money.</li>
+      <li><b>Revolut:</b> "average balance €2,300, median €410" — a few whales. An A/B test on revenue per user is dominated by whales: use a log transform, trimmed means, or a test on the median.</li>
+    </ul>
+
+    <h3>Bonus, one line each</h3>
+    <ul class="tight">
+      <li><b>Uniform:</b> every value in [a, b] equally likely. Mean (a+b)/2. Random number generators; "no information" priors.</li>
+      <li><b>Exponential:</b> time <em>between</em> Poisson events; memoryless. Mean 1/λ. Time until the next login, next failure.</li>
+      <li><b>Geometric:</b> number of trials until the first success. Expected number of tries until a customer converts.</li>
+    </ul>
+
+    <h3>How they relate — one picture</h3>
+    <div class="fx">Bernoulli (one trial)  ──sum of n──▶  Binomial (n trials)  ──n large, p small──▶  Poisson (rare events, λ = np)
+                                                 └──n large──▶  Normal (by the CLT)
+Any variable  ──average many of them──▶  Normal (CLT)
+Positive & multiplicative  ──log──▶  Normal   (that's log-normal)</div>
+
+    <table class="t">
+      <thead><tr><th>Distribution</th><th>Type</th><th>Parameters</th><th>Mean</th><th>Variance</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td>Bernoulli</td><td>discrete</td><td>p</td><td>p</td><td>p(1−p)</td><td>one yes/no</td></tr>
+        <tr><td>Binomial</td><td>discrete</td><td>n, p</td><td>np</td><td>np(1−p)</td><td>count of yes in n trials</td></tr>
+        <tr><td>Poisson</td><td>discrete</td><td>λ</td><td>λ</td><td>λ</td><td>count of rare events per window</td></tr>
+        <tr><td>Normal</td><td>continuous</td><td>μ, σ</td><td>μ</td><td>σ²</td><td>sums/averages; errors; test statistics</td></tr>
+        <tr><td>Log-normal</td><td>continuous</td><td>μ, σ of log X</td><td>&gt; median</td><td>large</td><td>money, sizes</td></tr>
+        <tr><td>Uniform</td><td>either</td><td>a, b</td><td>(a+b)/2</td><td>(b−a)²/12</td><td>equally likely values</td></tr>
+        <tr><td>Exponential</td><td>continuous</td><td>λ</td><td>1/λ</td><td>1/λ²</td><td>time between events</td></tr>
+      </tbody>
+    </table>
+
+    <div class="say30"><b>30 seconds — "Bernoulli, Binomial, Poisson, Normal — when do you use each?"</b>"Bernoulli is one yes/no event with probability p — one transaction being fraud. Binomial counts the yeses in n independent trials — defaults in a portfolio of a thousand loans, mean np. Poisson counts rare, independent events in a time window — disputes per merchant per month, with mean equal to variance, so if the variance is much bigger, events are clustering and I'd look for a ring. Normal is the bell curve: sums and averages of many small effects, so sample means and test statistics are normal by the central limit theorem — but individual amounts of money are not; those are heavy-tailed, and I'd log them or use medians."</div>
+
+    <div class="drill"><span class="lab">Exercises A3</span><ol>
+      <li>A card has a 0.3 % chance of a fraud attempt on any given day, days independent. Which distribution for "fraud attempts in a year"? Mean? Which simpler distribution approximates it, and why?</li>
+      <li>10 loans, each 5 % default, independent. P(no defaults)? P(at least 2)?</li>
+      <li>Support tickets arrive at 12 per hour. P(exactly 0 in a 5-minute window)? (Hint: λ for 5 minutes.)</li>
+      <li>Model residuals are normal with σ = €8. What fraction of predictions are off by more than €16?</li>
+      <li>You're told "average transaction is €85, standard deviation €600". What does the σ &gt; mean tell you about the shape? Which statistic would you ask for?</li>
+      <li>Disputes per merchant per month: mean 3, variance 30. Poisson or not? What might be going on?</li>
+      <li>Why is the variance of a Bernoulli largest at p = 0.5? What does that mean for predicting a 50/50 event vs. a 1 % event?</li>
+    </ol></div>
+  </section>
+  <!-- ============================================================ ANSWERS -->
+  <section>
+    <h2><span class="n">A</span>Answers — check only after you've written yours</h2>
+
+    <h3>A1</h3>
+    <ol class="ans">
+      <li>P(at least one fails) = 1 − P(both pass) = 1 − 0.95² = 1 − 0.9025 = <b>9.75 %</b>. (Not 10 %: adding double-counts the case where both fail.)</li>
+      <li>Independent would need P(A and B) = 0.3 × 0.5 = 0.15; it's 0.1, so <b>not independent</b> (B makes A less likely). P(A | B) = 0.1 / 0.5 = <b>0.2</b>.</li>
+      <li>Per 10,000: 100 fraudsters → 80 flagged; 9,900 honest → 495 flagged. P(fraud | flag) = 80 / 575 = <b>13.9 %</b>. Bayes: 0.8·0.01 / (0.8·0.01 + 0.05·0.99) = 0.008 / 0.0575 = 0.139.</li>
+    </ol>
+
+    <h3>A2</h3>
+    <ol class="ans">
+      <li>E = 0.7·0 + 0.25·20 + 0.05·500 = 0 + 5 + 25 = <b>€30</b>. Most likely value: €0. And no — €30 never occurs; the expectation is an average, not an outcome. (This is the "mean of money" problem in miniature.)</li>
+      <li>3X: mean 30, σ 6 (variance scales by 9, σ by 3). X + 5: mean 15, σ unchanged at 2 (shifting doesn't change spread).</li>
+      <li>Independent: 100 + 100 = <b>200</b>. Perfectly dependent (same customer, both default together): the loss is 2X, so Var = 4 × 100 = <b>400</b>. Correlation doubles the risk — that's concentration risk, and it's why binomial models understate portfolio variance when loans are correlated.</li>
+      <li>z = (130 − 40) / 15 = <b>6</b>. Yes, unusual — for a normal variable a 6σ event is one in a billion. But daily spend is heavy-tailed, so "unusual" is weaker than the normal rule suggests; still worth a look.</li>
+      <li>Yes. Correlation only detects <em>linear</em> relations. Example: y = x² over a symmetric range: perfectly related, correlation 0. Or a U-shaped relation between age and default rate.</li>
+    </ol>
+
+    <h3>A3</h3>
+    <ol class="ans">
+      <li>Binomial with n = 365, p = 0.003. Mean = 1.1 attempts. Because n is large and p small, <b>Poisson with λ = 1.1</b> approximates it well: P(0) = e^(−1.1) ≈ 0.33.</li>
+      <li>P(none) = 0.95¹⁰ = <b>0.599</b>. P(exactly 1) = 10 · 0.05 · 0.95⁹ = 10 · 0.05 · 0.630 = 0.315. P(at least 2) = 1 − 0.599 − 0.315 = <b>0.086</b>.</li>
+      <li>λ for 5 minutes = 12 × 5/60 = 1. P(0) = e^(−1) = <b>0.368</b>.</li>
+      <li>€16 = 2σ. Beyond ±2σ is about 5 % → <b>~5 %</b> of predictions off by more than €16.</li>
+      <li>σ much bigger than the mean on a positive quantity means a long right tail — a few huge transactions. The mean is not a typical transaction. Ask for the <b>median and the 90th/99th percentiles</b>.</li>
+      <li>Poisson would have variance ≈ 3. Variance 30 = ten times over-dispersed → <b>not Poisson</b>; disputes are clustering — a few merchants (or a few weeks) generate most of them. Look for a fraud ring, a broken merchant integration, or a data bug.</li>
+      <li>Var = p(1 − p): at p = 0.5 it's 0.25, at p = 0.01 it's 0.0099. A 50/50 event is maximally uncertain — each observation carries the most information and you need the most data per unit of precision; a 1 % event is almost always "no", so each observation tells you little and rare "yes" cases are precious. That's why imbalanced classification is hard: the information is concentrated in the few positives.</li>
+    </ol>
+  </section>
+
+  <p class="colophon">
+    Tomás Zanchetti · Revolut ML Basics · Module 1 — Probability · 29/09/2026<br>
+    Next: Module 2 — Statistics: population vs. sample, bias, sampling, CLT, confidence intervals, hypothesis tests, p-values, power, A/B testing end to end.
+  </p>
+
+</div>
+</body>
+</html>
