@@ -4,6 +4,21 @@
 
 **Method.** Two tracks in parallel. Theory gives the vocabulary and the formulas; the lab makes them empirical on real credit data. Every module points at a card and every card points back at a module. Progress is measured by `docs/NOTES.md`: one paragraph per module and per card, in Tomás's own words.
 
+## 🎯 Sprint to 8 October — "Machine Learning 1 (Basics)", 1 hour
+
+Confirmed 29/09. Syllabus from Revolut, verbatim: **(1) Maths** — Normal, Bernoulli, Poisson; bias and variance · **(2) Probability** — Bernoulli, Binomial, Gaussian, random variables · **(3) Statistics** — bias, statistical significance, A/B testing · **(4) Machine Learning** — basic models, pros and cons. Their prep links: alexeygrigorev `theory.md` (the closest to topic 4), kojino 120 questions (`probability.md`, `statistical-inference.md`, `predictive-modeling.md`), iamtodor Q&A, dingran quant-notes, awesome-ML courses.
+
+| Day | Theory | Lab / drills | Output |
+|---|---|---|---|
+| 29–30/09 | Module 1 §02–05: random variables, distributions, CLT/CI, tests & A/B | Card 0 answers · **Card 1** (rule vs. logistic regression, precision/recall/AUC) | NOTES.md M1 + C0 + C1 |
+| 1–2/10 | **Module 2**: what a model is · linear/logistic · bias–variance · regularisation · validation · trees/RF/GBM · kNN, naive Bayes, SVM, NN (one paragraph each, pros/cons) · metrics | **Card 3** (overfit on purpose: bias–variance you can see) | NOTES.md M2 + C3 |
+| 3–4/10 | **Question bank** (~100 Q, built from their links, mapped to the 4 topics, 3–5-line model answers) | Mock 1 (English, 45 min, all four topics) | list of weak spots |
+| 5–6/10 | Cheat sheets: distributions (mean/variance/when) · models pros/cons table · A/B checklist | Mocks 2–3 on the weak spots | — |
+| 7/10 | Light review only | — | sleep |
+| **8/10** | **Interview** | | |
+
+Modules 3 (ML design) and 4 (problem solving) move to after 8/10.
+
 ## Track A — Theory (one PDF per module, in `theory/`)
 
 | # | Module | Content | Status |
