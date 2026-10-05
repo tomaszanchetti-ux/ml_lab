@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Module 4 — The models</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+</style>
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EDEF;
+    --ink: #131A1F;
+    --ink-muted: #55646D;
+    --ink-faint: #82949E;
+    --rule: #D5DFE3;
+    --rule-strong: #B3C2C9;
+    --accent: #2B3FA8;
+    --accent-soft: #E6E9F7;
+    --on-accent: #FFFFFF;
+    --good: #1F6B4E;
+    --good-soft: #E2F0E9;
+    --bad: #9E3628;
+    --bad-soft: #F7E7E4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1417;
+      --surface: #151D21;
+      --surface-2: #1B252A;
+      --ink: #E6EDF0;
+      --ink-muted: #9AA9B1;
+      --ink-faint: #74858D;
+      --rule: #232F35;
+      --rule-strong: #35454C;
+      --accent: #7DBDD6;
+      --accent-soft: #16282F;
+      --on-accent: #0E1417;
+      --good: #74C7A0;
+      --good-soft: #132521;
+      --bad: #E4907E;
+      --bad-soft: #2A1A17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1417;
+    --surface: #151D21;
+    --surface-2: #1B252A;
+    --ink: #E6EDF0;
+    --ink-muted: #9AA9B1;
+    --ink-faint: #74858D;
+    --rule: #232F35;
+    --rule-strong: #35454C;
+    --accent: #7DBDD6;
+    --accent-soft: #16282F;
+    --on-accent: #0E1417;
+    --good: #74C7A0;
+    --good-soft: #132521;
+    --bad: #E4907E;
+    --bad-soft: #2A1A17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 1.15rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  p { margin: 0 0 0.8em; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 3rem 0 1.5rem;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 5.5vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- objective banner ---------- */
+
+  .objective {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 1.35rem 1.4rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .objective .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .objective p { font-size: 1.05rem; line-height: 1.45; font-weight: 600; }
+  .objective .small { font-size: 0.88rem; font-weight: 400; opacity: 0.92; margin-top: 0.6rem; }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 2.75rem; }
+
+  h2 {
+    font-size: 1.18rem;
+    letter-spacing: -0.012em;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  h2 .n {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--ink-muted); font-size: 0.93rem; margin: 0.9rem 0 0; }
+
+  /* ---------- cards ---------- */
+
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .q .ask {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 0.55rem;
+    line-height: 1.35;
+  }
+
+  .q .real {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+    text-transform: none;
+  }
+  .q .real b {
+    display: block;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.28rem;
+    font-weight: 600;
+  }
+
+  .say {
+    background: var(--good-soft);
+    border-left: 2px solid var(--good);
+    padding: 0.85rem 1rem;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+  }
+  .say em { color: var(--ink-muted); font-style: italic; }
+
+  .trap {
+    font-size: 0.86rem;
+    color: var(--bad);
+    line-height: 1.5;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .trap b {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    flex: none;
+    padding-top: 0.24em;
+  }
+
+  ul.tight { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.35rem; font-size: 0.94rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  /* ---------- callout ---------- */
+
+  .call {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 1.1rem 1.25rem;
+    margin: 1.15rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+  .call .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .call b { color: var(--ink); }
+
+  /* ---------- never list ---------- */
+
+  .never {
+    background: var(--bad-soft);
+    border: 1px solid var(--bad);
+    padding: 1.15rem 1.3rem;
+    margin-top: 1rem;
+  }
+  .never ol { margin: 0; padding-left: 1.2rem; }
+  .never li {
+    margin-bottom: 0.55rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .never li:last-child { margin-bottom: 0; }
+  .never li b { color: var(--bad); }
+
+  /* ---------- pitch ---------- */
+
+  .pitch {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    padding: 1.3rem 1.4rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  .pitch .beat {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin: 1.1rem 0 0.35rem;
+    font-weight: 600;
+  }
+  .pitch .beat:first-child { margin-top: 0; }
+
+  /* ---------- checklist ---------- */
+
+  .checks { margin-top: 1rem; border-top: 1px solid var(--rule); }
+  .check {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .check .box {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--rule-strong);
+    margin-top: 0.24em;
+  }
+  .check .txt { font-size: 0.94rem; line-height: 1.5; color: var(--ink-muted); }
+  .check .txt b { color: var(--ink); }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--rule-strong);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+
+<style>
+  /* ---------- print ---------- */
+  @page { size: A4; margin: 13mm 13mm 15mm; }
+
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.4pt;
+      line-height: 1.45;
+    }
+    body { padding: 0; }
+    .wrap { max-width: none; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .masthead { padding: 0 0 0.7rem; }
+    h1 { font-size: 22pt; }
+    .sub { font-size: 9.5pt; }
+    .objective { margin-top: 0.9rem; padding: 0.85rem 1rem; }
+    .objective p { font-size: 11pt; }
+    .objective .small { font-size: 9pt; }
+
+    section { padding-top: 1.25rem; }
+    h2 { font-size: 12.5pt; break-after: avoid; page-break-after: avoid; }
+    .lede { font-size: 9.2pt; margin-top: 0.5rem; }
+
+    .q, .never, .call, .objective {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* prosa: puede partirse entre páginas sin romper la lectura */
+    .pitch, .checks { break-inside: auto; page-break-inside: auto; }
+    .pitch .beat { break-after: avoid; page-break-after: avoid; }
+    .check { break-inside: avoid; page-break-inside: avoid; }
+
+    .q { padding: 0.8rem 0.9rem 0.85rem; margin-top: 0.65rem; }
+    .q .ask { font-size: 10.6pt; }
+    .q .real { font-size: 7.6pt; }
+    .say { font-size: 9.4pt; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+    .trap { font-size: 8.6pt; }
+    .pitch { font-size: 10pt; padding: 0.9rem 1rem; }
+    ul.tight li, .never li, .check .txt { font-size: 9.4pt; }
+
+    .colophon { margin-top: 1.6rem; font-size: 8pt; }
+  }
+</style>
+</head>
+<style>
+  /* ---------- fit matrix (nuevo en esta hoja) ---------- */
+  .fit { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .fit th, .fit td { text-align: left; vertical-align: top; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .fit th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); }
+  .fit td.st { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; font-weight: 600; }
+  .ok { color: var(--good); } .mid { color: #9A6B12; } .no { color: var(--bad); }
+  .fit td.req { font-weight: 600; width: 27%; }
+  .fit td.ev { color: var(--ink-muted); }
+  .fit td.ev b { color: var(--ink); }
+  .en { font-style: normal; }
+  .say .es { display: block; margin-top: 0.55rem; font-size: 0.82rem; color: var(--ink-muted); font-style: italic; }
+  .facts { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .facts li { display: flex; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  .facts li b { flex: none; width: 9.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent); padding-top: 0.2em; }
+  .facts li span { color: var(--ink-muted); }
+  @media print {
+    .fit { font-size: 8.6pt; } .fit td.st { font-size: 7.4pt; }
+    .fit tr { break-inside: avoid; page-break-inside: avoid; }
+    .facts li { font-size: 9pt; break-inside: avoid; }
+    .say .es { font-size: 8.2pt; }
+  }
+</style>
+<style>
+  .f { font-family: var(--mono); font-size: 0.9em; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap; }
+  .fx { font-family: var(--mono); font-size: 0.88rem; background: var(--surface-2); padding: 0.7rem 0.9rem; margin: 0.6rem 0; line-height: 1.6; overflow-x: auto; }
+  .ex { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--good); padding: 0.9rem 1.1rem; margin: 0.8rem 0; font-size: 0.94rem; }
+  .ex .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--good); display: block; margin-bottom: 0.35rem; font-weight: 600; }
+  .drill { background: var(--accent-soft); border: 1px solid var(--rule-strong); padding: 0.9rem 1.1rem; margin: 1rem 0; font-size: 0.94rem; }
+  .drill .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.4rem; font-weight: 600; }
+  .drill ol { margin: 0; padding-left: 1.2rem; } .drill li { margin-bottom: 0.4rem; }
+  .ans { color: var(--ink-muted); font-size: 0.9rem; }
+  .ans li { margin-bottom: 0.45rem; }
+  table.t { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+  table.t th, table.t td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h3 { font-size: 1.02rem; margin: 1.6rem 0 0.4rem; }
+  h4 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; color: var(--ink); }
+  .say30 { border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.6rem 0; font-size: 0.92rem; background: var(--surface); }
+  .say30 b { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .part { margin-top: 3rem; padding: 1rem 1.2rem; background: var(--accent); color: var(--on-accent); }
+  .part .k { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; display: block; }
+  .part h2 { border: 0; margin: 0.2rem 0 0; padding: 0; color: var(--on-accent); font-size: 1.4rem; }
+  .part p { margin: 0.4rem 0 0; font-size: 0.92rem; opacity: 0.95; }
+  @media print { .fx { font-size: 8.4pt; } .ex, .drill, .say30 { break-inside: avoid; } h3, h4 { break-after: avoid; } .part { break-before: page; } }
+</style>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Revolut · Machine Learning 1 (Basics) · 8 October 2026 · Module 4 of 4</p>
+    <h1>Module 4 — The models</h1>
+    <p class="sub">Revolut's topic 4, verbatim: <b>"Basic ML models, pros and cons of different models."</b> Every model here is Module 3's machinery in a different shape: a function with parameters, trained by minimising a loss, sitting somewhere on the bias–variance curve. For each one: the idea in two lines, how it learns, pros, cons, when you'd use it at Revolut — and a 30-second answer.</p>
+  </header>
+
+  <div class="objective">
+    <span class="lab">How to answer "pros and cons of X"</span>
+    <p>Five beats, always the same: <b>what it does</b> → <b>how it learns</b> → <b>two strengths</b> → <b>two weaknesses</b> → <b>when I'd use it</b>. Thirty seconds. Then stop.</p>
+    <p class="small">And one honest sentence you can use for any model you haven't worked with: "I haven't used that in production; what I know is what it's for and where it sits against the alternatives." For a breadth interview that is a good answer.</p>
+  </div>
+
+  <!-- D0 -->
+  <section>
+    <h2><span class="n">D0</span>The map</h2>
+    <table class="t">
+      <thead><tr><th>Family</th><th>Models</th><th>Core idea</th></tr></thead>
+      <tbody>
+        <tr><td><b>Linear</b></td><td>linear regression · logistic regression (· SVM with a linear kernel)</td><td>a weighted sum of the features</td></tr>
+        <tr><td><b>Instance-based</b></td><td>k-nearest neighbours</td><td>"similar cases have similar outcomes"</td></tr>
+        <tr><td><b>Probabilistic</b></td><td>naive Bayes</td><td>Bayes' theorem with an independence shortcut</td></tr>
+        <tr><td><b>Trees</b></td><td>decision tree</td><td>a flowchart of if/else questions</td></tr>
+        <tr><td><b>Ensembles of trees</b></td><td>random forest (bagging) · gradient boosting (XGBoost, LightGBM, CatBoost)</td><td>many trees are better than one</td></tr>
+        <tr><td><b>Neural networks</b></td><td>feed-forward · CNN (images) · RNN / transformer (sequences, text)</td><td>layers of weighted sums with non-linearities; learns its own features</td></tr>
+        <tr><td><b>Unsupervised</b></td><td>k-means · PCA · isolation forest</td><td>structure without labels</td></tr>
+      </tbody>
+    </table>
+    <p><b>The practical truth worth saying out loud:</b> on tabular business data — customers, transactions, credit — <b>gradient-boosted trees</b> are usually the strongest off-the-shelf model, <b>logistic regression</b> is the interpretable baseline and the regulated-industry standard, and <b>neural networks</b> win on images, text and sequences, or when you have enormous data and can learn representations (which is what PRAGMA does with event sequences).</p>
+  </section>
+
+  <!-- D1 -->
+  <section>
+    <h2><span class="n">D1</span>Linear regression</h2>
+    <div class="fx">ŷ = w₀ + w₁x₁ + w₂x₂ + … + wₙxₙ          trained by minimising MSE</div>
+    <p><b>What it does:</b> predicts a number as a weighted sum of the features. <b>How it learns:</b> finds the weights that minimise the squared error — in closed form (the normal equation) or by gradient descent.</p>
+    <p><b>Reading it:</b> w₁ is the change in the prediction when x₁ rises by one unit, <em>holding the other features fixed</em>. w₀ (the intercept, or bias term) is the prediction when all features are zero. A bigger weight does <em>not</em> mean a more important feature unless the features are on the same scale.</p>
+    <h3>Assumptions (a classic question)</h3>
+    <ul class="tight">
+      <li><b>Linearity</b> — the relationship really is roughly a straight line (or you've transformed features so it is).</li>
+      <li><b>Independent errors</b> — one case's error tells you nothing about another's (violated in time series).</li>
+      <li><b>Constant error variance</b> (homoscedasticity) — errors are as large for big customers as for small ones.</li>
+      <li><b>Normally distributed errors</b> — needed for confidence intervals and p-values on the weights, not for prediction itself.</li>
+      <li><b>No strong multicollinearity</b> — features aren't near-copies of each other.</li>
+    </ul>
+    <p><b>Multicollinearity:</b> if z = x + y exactly, the weights are not uniquely defined — infinitely many combinations give the same predictions, and the software either fails or returns arbitrary huge weights. If z = x + y + a little noise, it runs, but the weights are unstable: tiny changes in the data swing them wildly. Predictions can still be fine; interpretation is destroyed. Fix: drop one, or regularise (ridge).</p>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>Simple, fast, needs little data · fully interpretable (one weight per feature) · a strong baseline · low variance</td>
+        <td>Only captures linear relationships unless you engineer features · sensitive to outliers (squared loss) · unstable with correlated features · high bias on complex patterns</td>
+      </tr></tbody>
+    </table>
+    <p><b>Use it for:</b> forecasting a quantity with a few well-understood drivers; as the baseline before anything fancier. For prices, amounts and other skewed targets: predict <span class="f">log(y)</span>.</p>
+    <div class="say30"><b>30 seconds — "linear regression: pros and cons"</b>"It predicts a number as a weighted sum of the features, with weights chosen to minimise squared error. Its strengths are simplicity and interpretability — each weight is the effect of one feature holding the others fixed — and it needs little data and is hard to overfit. Its weaknesses: it only captures linear effects unless I engineer the features, squared error makes it sensitive to outliers, and correlated features make the weights unstable. I'd use it as a baseline and when explaining the drivers matters more than the last point of accuracy."</div>
+  </section>
+
+  <!-- D2 -->
+  <section>
+    <h2><span class="n">D2</span>Logistic regression</h2>
+    <div class="fx">z = w₀ + w₁x₁ + … + wₙxₙ          p = σ(z) = 1 / (1 + e^(−z))          trained by minimising log loss</div>
+    <p><b>What it does:</b> classification. It computes the same weighted sum as linear regression, then squashes it through the <b>sigmoid</b> into a probability between 0 and 1. <b>How it learns:</b> gradient descent on the log loss (= maximum likelihood).</p>
+    <ul class="tight">
+      <li><b>Sigmoid:</b> an S-shaped curve; σ(0) = 0.5; large positive z → near 1; large negative → near 0.</li>
+      <li><b>Is it a linear model?</b> Yes. The decision boundary (where p = 0.5, i.e. z = 0) is a straight line / flat plane, and the model is linear in the <b>log-odds</b>: <span class="f">log(p / (1 − p)) = z</span>.</li>
+      <li><b>Reading it:</b> raising x₁ by one unit adds w₁ to the log-odds, i.e. multiplies the odds by <span class="f">e^(w₁)</span>. "One more month late multiplies the odds of default by 2.3."</li>
+      <li>Despite the name, it's a <b>classification</b> model.</li>
+    </ul>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>Interpretable — weights are odds ratios · outputs well-calibrated probabilities · fast, scales to millions of rows and sparse features · stable, low variance · easy to regularise (L1/L2) · accepted by regulators</td>
+        <td>Linear boundary: misses interactions and non-linear effects unless you build them in (bins, products) · needs scaled features when regularised · sensitive to outliers and to highly correlated features · usually beaten by boosted trees on raw tabular data</td>
+      </tr></tbody>
+    </table>
+    <p><b>Use it for:</b> the baseline for any classification problem; <b>credit scorecards</b> (the industry standard for decades precisely because every point can be explained to a customer and a regulator); high-dimensional sparse data like text.</p>
+    <div class="say30"><b>30 seconds — "what is logistic regression? is it linear?"</b>"It's a classifier: a weighted sum of the features passed through a sigmoid to give a probability, trained by minimising log loss. It is a linear model — linear in the log-odds, so the decision boundary is a straight line. Pros: interpretable, each weight is an odds ratio; well-calibrated probabilities; fast and stable; and regulators accept it, which is why credit scorecards use it. Cons: it can't capture non-linear effects or interactions unless I engineer them, so on raw tabular data boosted trees usually beat it. I always fit it first as the baseline."</div>
+    <div class="drill"><span class="lab">Exercises D1–D2</span><ol>
+      <li>A linear regression for monthly spend has weights: income (in €k) = 12, age (in years) = −0.5. Which feature is "more important"? What would you need to do to compare them?</li>
+      <li>Your dataset has balance_eur, balance_usd and their sum. What happens to a linear model, and what do you do?</li>
+      <li>A logistic regression for default has weight 0.7 on "months late". What does one extra month do to the odds? If z = 0 for a customer, what's the predicted probability?</li>
+      <li>Default depends on the <em>combination</em> "young AND high credit utilisation" but on neither alone. Will plain logistic regression find it? How could you help it?</li>
+      <li>Why do banks still use logistic regression for credit decisions when boosted trees score higher?</li>
+    </ol></div>
+  </section>
+
+  <!-- D3 D4 -->
+  <section>
+    <h2><span class="n">D3</span>k-nearest neighbours (k-NN)</h2>
+    <p><b>What it does:</b> to predict for a new case, find the k most similar cases in the training data and take a vote (classification) or an average (regression). <b>How it learns:</b> it doesn't — it stores the data ("lazy learning"); all the work happens at prediction time.</p>
+    <ul class="tight">
+      <li><b>k</b> is the bias–variance dial: k = 1 follows every point (high variance, overfits); large k averages over big neighbourhoods (high bias). Choose by cross-validation.</li>
+      <li><b>Similarity = distance</b>, so features <b>must be scaled</b> — otherwise the one in the largest units dominates.</li>
+      <li><b>Curse of dimensionality:</b> with many features, every point is far from every other, "nearest" stops meaning anything, and you'd need exponentially more data.</li>
+    </ul>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>Dead simple, no training · naturally non-linear · easy to explain ("customers like you…") · new data can be added instantly</td>
+        <td>Slow and memory-hungry at prediction time on large data · breaks down in high dimensions · needs scaling and a meaningful distance · sensitive to irrelevant features</td>
+      </tr></tbody>
+    </table>
+    <p><b>Use it for:</b> small, low-dimensional problems; baselines; and, in modern form, <b>nearest-neighbour search on embeddings</b> — "find customers similar to this one" in PRAGMA's embedding space, or the retrieval step in RAG.</p>
+
+    <h2 style="margin-top:2rem"><span class="n">D4</span>Naive Bayes</h2>
+    <p><b>What it does:</b> applies Bayes' theorem (Module 1) to get P(class | features), with one simplifying — "naive" — assumption: the features are <b>independent given the class</b>, so their likelihoods just multiply. <b>How it learns:</b> by counting — how often each feature value appears in each class.</p>
+    <div class="fx">P(spam | words)  ∝  P(spam) × P(word₁ | spam) × P(word₂ | spam) × …</div>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>Extremely fast to train and predict · works with little data · handles thousands of features (words) · a strong text baseline</td>
+        <td>The independence assumption is almost always false → probabilities are poorly calibrated (too extreme), though the ranking is often fine · can't learn interactions</td>
+      </tr></tbody>
+    </table>
+    <p><b>Use it for:</b> text classification baselines (spam, routing support tickets by topic), when you need something working in an hour.</p>
+    <div class="say30"><b>30 seconds — "k-NN and naive Bayes"</b>"k-NN predicts from the k most similar training cases — a vote or an average. No training, naturally non-linear, but slow at prediction time, it needs scaled features, and it degrades in high dimensions because distances stop being meaningful; k trades variance for bias. Naive Bayes applies Bayes' theorem assuming the features are independent given the class, so it just multiplies likelihoods learned by counting. It's very fast and a good text baseline, but the independence assumption is wrong in practice, so its probabilities are badly calibrated even when its ranking is useful."</div>
+  </section>
+
+  <!-- D5 -->
+  <section>
+    <h2><span class="n">D5</span>Decision trees</h2>
+    <p><b>What it does:</b> a flowchart of yes/no questions on the features ("months late ≥ 2?" → "limit &lt; €1,000?" → …); each leaf gives a prediction — the majority class or the average of the training cases that land there. <b>How it learns:</b> greedily. At each node it tries every feature and every threshold and picks the split that makes the two children as <b>pure</b> as possible, then recurses.</p>
+    <ul class="tight">
+      <li><b>Purity measures:</b> <b>Gini impurity</b> <span class="f">1 − Σ pₖ²</span> or <b>entropy</b> <span class="f">−Σ pₖ log pₖ</span> for classification (both are 0 for a pure node, maximal at 50/50); variance / MSE for regression. The improvement from a split is the <b>information gain</b>.</li>
+      <li><b>Main hyperparameters:</b> maximum depth, minimum samples per leaf, minimum gain to split. They control complexity: a fully grown tree memorises the training data.</li>
+      <li><b>Pruning:</b> cutting back branches that don't improve validation error.</li>
+    </ul>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>Interpretable — you can read the rules · captures non-linear effects and interactions automatically · no scaling needed; handles mixed numeric / categorical data and outliers · fast</td>
+        <td><b>High variance:</b> a small change in the data can produce a completely different tree · overfits easily if deep · greedy, so not globally optimal · step-shaped predictions; can't extrapolate beyond the training range · usually less accurate alone than ensembles</td>
+      </tr></tbody>
+    </table>
+    <p><b>Use it for:</b> when you need explicit, auditable rules; exploring which features and thresholds matter; and as the building block of the two ensembles below.</p>
+    <div class="say30"><b>30 seconds — "decision trees: pros and cons"</b>"A decision tree splits the data with a sequence of yes/no questions, choosing at each step the feature and threshold that best separate the classes — measured by Gini or entropy — until the leaves are fairly pure. Pros: readable rules, non-linear effects and interactions for free, no scaling, robust to outliers. Cons: a single tree is unstable — high variance, it overfits if I let it grow — and it's greedy and gives step-like predictions. So in practice I'd use a shallow tree when I need explainable rules, and otherwise an ensemble of trees."</div>
+  </section>
+
+  <!-- D6 -->
+  <section>
+    <h2><span class="n">D6</span>Ensembles of trees — random forest and gradient boosting</h2>
+    <p class="lede">One tree is unstable. Two ways to fix that — and the difference between them is the most likely "compare two models" question.</p>
+
+    <h3>Random forest — many independent trees, averaged (bagging)</h3>
+    <ul class="tight">
+      <li>Train hundreds of deep trees, each on a <b>bootstrap sample</b> (rows drawn with replacement) and with a <b>random subset of features</b> considered at each split. Average their predictions (or take a vote).</li>
+      <li><b>Why it works:</b> each tree has low bias and high variance; averaging many <em>decorrelated</em> trees cancels the variance. The randomness in rows and features is what decorrelates them — if all trees saw the same data they'd make the same mistakes and averaging wouldn't help.</li>
+      <li><b>Hyperparameters:</b> number of trees (more is better until it plateaus; it doesn't overfit by adding trees), max features per split, tree depth / min leaf size.</li>
+      <li>Trees are independent → trivially <b>parallel</b>. Free validation via <b>out-of-bag</b> samples (each tree is tested on the rows it didn't see).</li>
+    </ul>
+
+    <h3>Gradient boosting — trees in sequence, each fixing the last one's errors</h3>
+    <ul class="tight">
+      <li>Start with a simple prediction (the mean). Fit a <b>small</b> tree to the <b>errors</b> (residuals — formally, the gradient of the loss). Add a fraction of it to the model (the <b>learning rate</b>). Repeat hundreds of times.</li>
+      <li><b>Why it works:</b> each shallow tree is a weak learner with high bias; adding them one by one drives the <b>bias</b> down step by step.</li>
+      <li><b>Hyperparameters:</b> number of trees, learning rate (smaller rate → more trees needed, usually better), tree depth (3–8), subsampling of rows/columns, regularisation. Choose the number of trees by <b>early stopping</b> on validation data — unlike a forest, boosting <em>does</em> overfit if you keep adding trees.</li>
+      <li><b>XGBoost, LightGBM, CatBoost</b> are fast, regularised implementations. They handle missing values natively.</li>
+    </ul>
+
+    <table class="t">
+      <thead><tr><th></th><th>Random forest</th><th>Gradient boosting</th></tr></thead>
+      <tbody>
+        <tr><td>Trees built</td><td>independently, in parallel</td><td>sequentially, each on the previous errors</td></tr>
+        <tr><td>Each tree</td><td>deep (low bias, high variance)</td><td>shallow (high bias, low variance)</td></tr>
+        <tr><td>Mainly reduces</td><td><b>variance</b></td><td><b>bias</b></td></tr>
+        <tr><td>More trees</td><td>never hurts</td><td>eventually overfits → early stopping</td></tr>
+        <tr><td>Tuning</td><td>works well out of the box</td><td>needs care (learning rate, depth, number of trees)</td></tr>
+        <tr><td>Accuracy on tabular data</td><td>very good</td><td>usually the best</td></tr>
+        <tr><td>Robust to noisy labels / outliers</td><td>more</td><td>less (it chases errors)</td></tr>
+      </tbody>
+    </table>
+    <p><b>Both:</b> no scaling needed, non-linear, interactions for free, strong on tabular data. <b>Both lose:</b> the readable single tree — you get <b>feature importance</b> instead (by total gain, by <b>permutation</b> — shuffle one feature and see how much the score drops — or <b>SHAP</b> values, which explain an individual prediction). Importance is not causation, and correlated features share or steal each other's importance.</p>
+    <div class="say30"><b>30 seconds — "random forest vs. gradient boosting"</b>"Both are ensembles of decision trees. A random forest trains many deep trees independently on bootstrap samples with random feature subsets and averages them — averaging decorrelated trees reduces variance; it parallelises, is robust, and works almost without tuning. Gradient boosting builds shallow trees sequentially, each one fitted to the errors of the model so far, which reduces bias; it's usually the most accurate on tabular data but needs careful tuning — learning rate, depth, and early stopping, because it will overfit if I keep adding trees. I'd start with a forest for a robust baseline and move to boosting — XGBoost or LightGBM — for the last points of accuracy."</div>
+    <div class="drill"><span class="lab">Exercises D3–D6</span><ol>
+      <li>In k-NN you go from k = 1 to k = 200 on 1,000 training points. What happens to bias and variance? What does the model do at k = 1,000?</li>
+      <li>k-NN on customers using income (in €) and age (in years), unscaled. Which feature decides who the neighbours are, and why?</li>
+      <li>Why is naive Bayes "naive"? Give an example of two features in a fraud problem that clearly violate the assumption.</li>
+      <li>A node has 80 non-defaulters and 20 defaulters. Gini impurity? After a split: left 60/0, right 20/20. Is that a good split? (Compute the weighted Gini.)</li>
+      <li>You retrain a deep tree each month and the rules change completely. Which ensemble addresses exactly this, and how?</li>
+      <li>In a random forest, why choose a random subset of features at each split instead of always the best of all features?</li>
+      <li>Your boosting model: training AUC keeps rising to 0.99; validation AUC peaked at round 300 and is now falling at round 1,000. What is happening and what do you do?</li>
+      <li>"Feature X has the highest importance, so increasing X will reduce default." What's wrong with that sentence?</li>
+    </ol></div>
+  </section>
+
+  <!-- D7 D8 -->
+  <section>
+    <h2><span class="n">D7</span>Support vector machines (SVM) — one paragraph</h2>
+    <p><b>What it does:</b> finds the boundary that separates two classes with the <b>widest possible margin</b>; only the points nearest the boundary — the <b>support vectors</b> — matter. With the <b>kernel trick</b> it can draw curved boundaries by implicitly working in a higher-dimensional space. <b>Pros:</b> effective in high dimensions and on small-to-medium data; robust. <b>Cons:</b> slow on large datasets; needs scaling and careful choice of kernel and parameters; no natural probabilities; hard to interpret. Largely displaced by boosted trees (tabular) and neural networks (everything else) — know what it is, don't dwell on it.</p>
+
+    <h2 style="margin-top:2rem"><span class="n">D8</span>Neural networks</h2>
+    <p><b>What it does:</b> stacks layers of "weighted sum → non-linear <b>activation</b>". The first layers learn simple features, later layers combine them into complex ones — the network <b>learns its own features</b> from raw data instead of relying on hand-crafted ones. <b>How it learns:</b> <b>backpropagation</b> computes how much each weight contributed to the error (the chain rule, layer by layer, backwards), and (stochastic) gradient descent updates all the weights.</p>
+    <ul class="tight">
+      <li><b>Why activations:</b> without a non-linearity, any stack of layers collapses into one linear model. <b>ReLU</b> (<span class="f">max(0, z)</span>) is the default — cheap and it doesn't "saturate" like the sigmoid, whose flat ends make gradients vanish in deep networks. Sigmoid / softmax are used at the output to produce probabilities.</li>
+      <li><b>Regularisation:</b> dropout (randomly switch off units during training), weight decay (L2), early stopping, data augmentation.</li>
+      <li><b>Architectures, one line each:</b> <b>CNN</b> — shared filters that slide over an image (ID documents, cheques). <b>RNN / LSTM</b> — process a sequence step by step (older approach to text, time series). <b>Transformer</b> — <b>attention</b> lets every element of a sequence look at every other; the architecture behind LLMs and behind <b>PRAGMA</b>, which treats a customer's banking events like words in a sentence.</li>
+      <li><b>Embeddings:</b> learned vectors that represent things (words, customers, merchants) so that similar ones are close. The output of PRAGMA is a customer embedding; a small model on top of it does the actual task.</li>
+      <li><b>Transfer learning / fine-tuning:</b> take a model pre-trained on huge data and adapt it to your task with little data. This is the foundation-model idea.</li>
+    </ul>
+    <table class="t">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody><tr>
+        <td>State of the art on images, text, audio, sequences · learns features automatically · scales with data — keeps improving where other models plateau · flexible: any input, any output · transfer learning</td>
+        <td>Data- and compute-hungry · many hyperparameters; harder to train and debug · a black box — hard to explain to a regulator · on small / medium <b>tabular</b> data, boosted trees are usually as good or better with far less effort · latency and serving cost</td>
+      </tr></tbody>
+    </table>
+    <div class="say30"><b>30 seconds — "neural networks: when would you use one?"</b>"A neural network is layers of weighted sums with non-linear activations, trained by backpropagation and gradient descent; its distinguishing feature is that it learns its own representations from raw data. I'd use one for unstructured data — images, text, event sequences — or when there's enough data that learned features beat hand-made ones; that's the logic of a foundation model like PRAGMA. The costs are data and compute, tuning effort, and explainability. For an ordinary tabular problem with a few hundred thousand rows I'd reach for gradient boosting first."</div>
+  </section>
+
+  <!-- D9 -->
+  <section>
+    <h2><span class="n">D9</span>Unsupervised — k-means, PCA, anomaly detection</h2>
+    <h3>k-means clustering</h3>
+    <p><b>What it does:</b> groups points into k clusters. <b>How:</b> (1) place k centres at random; (2) assign every point to its nearest centre; (3) move each centre to the mean of its points; repeat 2–3 until nothing changes.</p>
+    <ul class="tight">
+      <li><b>Choosing k:</b> the <b>elbow</b> method (plot within-cluster distance against k; look for the bend), the <b>silhouette</b> score, or — honestly — what's useful to the business.</li>
+      <li><b>Pros:</b> simple, fast, scales well. <b>Cons:</b> you must choose k; assumes roughly round, similar-sized clusters; sensitive to scaling, outliers and the random start (run it several times); there's no "right answer" to validate against.</li>
+      <li><b>Alternatives, one line:</b> <b>DBSCAN</b> — clusters by density, finds arbitrary shapes and labels outliers, no k needed, struggles when densities differ. <b>Gaussian mixtures</b> — soft, elliptical clusters with probabilities.</li>
+    </ul>
+    <h3>PCA — dimensionality reduction</h3>
+    <p>Finds the directions along which the data varies most and re-expresses it in a few of them. Uses: compressing many correlated features, visualising in 2-D, removing noise. Cost: the new components are mixtures of the original features — harder to interpret.</p>
+    <h3>Anomaly detection</h3>
+    <p>Finding the cases that don't look like the rest, without labels: z-scores, <b>isolation forest</b> (anomalies are easy to isolate with few random splits), distance to nearest neighbours, or a large reconstruction error. Use: new fraud patterns nobody has labelled yet.</p>
+    <div class="say30"><b>30 seconds — "how does k-means work?"</b>"It's a clustering algorithm for unlabelled data. I pick k; it places k centres, assigns each point to the nearest centre, moves each centre to the mean of its assigned points, and repeats until the assignments stop changing. It's fast and simple, but I have to choose k — with the elbow method or silhouette score, or by what the business can act on — it assumes roughly spherical clusters, and it's sensitive to feature scaling and to the starting points, so I standardise and run it several times."</div>
+  </section>
+
+  <!-- D10 -->
+  <section>
+    <h2><span class="n">D10</span>Preparing the data — the questions that come with the models</h2>
+    <table class="t">
+      <thead><tr><th>Topic</th><th>What to know</th></tr></thead>
+      <tbody>
+        <tr><td><b>Categorical features</b></td><td><b>One-hot encoding</b>: one 0/1 column per category — needed because models do arithmetic and "country = 3" would imply an order. Too many categories (merchant ID) → target encoding, hashing, or learned embeddings. Tree libraries like CatBoost / LightGBM handle categories directly.</td></tr>
+        <tr><td><b>Scaling</b></td><td>Needed for anything based on distances or gradient descent on a penalised loss: k-NN, k-means, SVM, regularised linear models, neural nets. <b>Not</b> needed for trees.</td></tr>
+        <tr><td><b>Missing values</b></td><td>Impute (median, or a model) and add a "was missing" flag — missingness is often informative. Boosted-tree libraries handle missing values natively.</td></tr>
+        <tr><td><b>Outliers</b></td><td>Check whether they're errors or signal. Cap / winsorise, log-transform, use robust losses (MAE, Huber) or tree models.</td></tr>
+        <tr><td><b>Feature selection</b></td><td>Fewer features → less overfitting, faster, easier to explain and to maintain. Methods: filter (correlation with target), L1 regularisation, model-based importance, recursive elimination.</td></tr>
+        <tr><td><b>Curse of dimensionality</b></td><td>More features need exponentially more data to cover the space; distances become meaningless. Why "just add every column" backfires.</td></tr>
+        <tr><td><b>Hyperparameter tuning</b></td><td><b>Grid search</b>: try every combination — thorough, explodes with the number of parameters. <b>Random search</b>: sample combinations — finds good regions far faster when only a few parameters matter. Bayesian optimisation: smarter sampling. Always with cross-validation.</td></tr>
+        <tr><td><b>Train ≠ production data</b></td><td>If the test distribution differs from training (new market, new season), performance drops. Detect by monitoring feature distributions; fix by retraining on recent data.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- D11 -->
+  <section>
+    <h2><span class="n">D11</span>Which model when — the comparison table</h2>
+    <table class="t">
+      <thead><tr><th>Model</th><th>Interpretable</th><th>Non-linear</th><th>Needs scaling</th><th>Main strength</th><th>Main weakness</th></tr></thead>
+      <tbody>
+        <tr><td>Linear regression</td><td>✔✔</td><td>✖</td><td>if regularised</td><td>simple, explainable baseline</td><td>linear only; outliers</td></tr>
+        <tr><td>Logistic regression</td><td>✔✔</td><td>✖</td><td>if regularised</td><td>calibrated, explainable, regulator-friendly</td><td>misses interactions</td></tr>
+        <tr><td>k-NN</td><td>✔</td><td>✔</td><td>✔</td><td>no training, simple</td><td>slow to predict; high dimensions</td></tr>
+        <tr><td>Naive Bayes</td><td>✔</td><td>✖</td><td>✖</td><td>fast text baseline</td><td>independence assumption</td></tr>
+        <tr><td>Decision tree</td><td>✔✔</td><td>✔</td><td>✖</td><td>readable rules</td><td>unstable, overfits</td></tr>
+        <tr><td>Random forest</td><td>~</td><td>✔</td><td>✖</td><td>robust, little tuning</td><td>large, less accurate than boosting</td></tr>
+        <tr><td>Gradient boosting</td><td>~</td><td>✔</td><td>✖</td><td>best accuracy on tabular data</td><td>tuning; can overfit</td></tr>
+        <tr><td>SVM</td><td>✖</td><td>✔ (kernels)</td><td>✔</td><td>high-dimensional, small data</td><td>doesn't scale; no probabilities</td></tr>
+        <tr><td>Neural network</td><td>✖</td><td>✔✔</td><td>✔</td><td>images, text, sequences; learns features</td><td>data, compute, opacity</td></tr>
+        <tr><td>k-means</td><td>✔</td><td>—</td><td>✔</td><td>fast clustering</td><td>must choose k; round clusters</td></tr>
+      </tbody>
+    </table>
+    <h3>How to choose — the questions to ask, in order</h3>
+    <ol class="tight" style="padding-left:1.2rem">
+      <li><b>Is there a label?</b> No → clustering / anomaly detection. Yes → supervised.</li>
+      <li><b>What kind of data?</b> Images, text, sequences → neural networks (probably a pre-trained one). Tabular → trees or linear models.</li>
+      <li><b>Must every decision be explained</b> (credit, a regulator, a customer complaint)? → logistic regression or a shallow tree; or boosted trees with SHAP if the regulator accepts it.</li>
+      <li><b>How much data?</b> Hundreds of rows → simple models. Hundreds of thousands and up → boosting. Billions of events → representation learning.</li>
+      <li><b>Latency and cost at serving time?</b> A linear model answers in microseconds; a large network may not fit a 200 ms budget.</li>
+      <li><b>Always:</b> start with a simple baseline, and only keep the complex model if it beats the baseline by enough to pay for its complexity.</li>
+    </ol>
+    <div class="say30"><b>30 seconds — "which model would you use to predict a binary outcome, and why?"</b>"I'd start with logistic regression as a baseline — fast, interpretable, well calibrated. If the data is tabular and the relationship is likely non-linear with interactions, I'd try gradient-boosted trees, which usually give the best accuracy there, with early stopping and cross-validation. I'd compare them on precision–recall at the operating threshold, not accuracy, since the outcome is usually rare. Then the choice depends on constraints: if every decision has to be explained to a regulator, the simpler model may win even if it scores lower; if the input is text or event sequences, I'd move to a neural approach."</div>
+    <div class="drill"><span class="lab">Exercises D7–D11</span><ol>
+      <li>Why does a neural network need non-linear activation functions? What happens with none?</li>
+      <li>You have 5,000 labelled rows of tabular customer data and need to predict churn. Neural network or gradient boosting? Give two reasons.</li>
+      <li>Revolut wants to read the fields from photos of ID documents. Which model family, and why not a random forest on the raw pixels?</li>
+      <li>You run k-means with k = 4 twice and get different clusters. Why? What do you do about it?</li>
+      <li>Which of these need feature scaling: k-NN, random forest, logistic regression with L2, k-means, XGBoost, a neural network?</li>
+      <li>A feature "merchant_id" has 2 million distinct values. Why is one-hot encoding a problem, and what are two alternatives?</li>
+      <li>Pick a model and justify in two sentences: (a) a credit decision that must be explainable to the customer; (b) fraud scoring on 50 million tabular transactions with a 100 ms budget; (c) routing support messages to the right team; (d) finding new, unlabelled fraud patterns; (e) "customers similar to this one" for a campaign.</li>
+      <li>Grid search over 6 hyperparameters with 5 values each: how many models? Why is random search usually the better use of the same budget?</li>
+    </ol></div>
+  </section>
+
+  <!-- cheat -->
+  <section>
+    <h2><span class="n">D12</span>One-page cheat sheet</h2>
+    <ul class="facts">
+      <li><b>Linear regression</b><span>Weighted sum → number; minimises MSE. Interpretable baseline; linear only; outliers and collinearity hurt.</span></li>
+      <li><b>Logistic regression</b><span>Weighted sum → sigmoid → probability; log loss. Linear in log-odds; weights = odds ratios; calibrated; the scorecard standard.</span></li>
+      <li><b>k-NN</b><span>Vote of the k most similar cases. No training; slow prediction; scale features; fails in high dimensions. k = bias–variance dial.</span></li>
+      <li><b>Naive Bayes</b><span>Bayes + "features independent given the class". Fast text baseline; badly calibrated.</span></li>
+      <li><b>Decision tree</b><span>If/else splits chosen by Gini / entropy. Readable, non-linear, no scaling; unstable and overfits.</span></li>
+      <li><b>Random forest</b><span>Many deep trees on bootstrap samples + random features, averaged → lower variance. Robust, parallel, little tuning.</span></li>
+      <li><b>Gradient boosting</b><span>Shallow trees in sequence, each fitting the previous errors → lower bias. Best on tabular; tune learning rate, depth; early stopping.</span></li>
+      <li><b>SVM</b><span>Widest-margin boundary; kernels for curves. Good on small high-dimensional data; doesn't scale.</span></li>
+      <li><b>Neural network</b><span>Layers + activations, trained by backprop. Learns features; images, text, sequences; needs data and compute; opaque.</span></li>
+      <li><b>k-means</b><span>Assign to nearest centre, move centres, repeat. Choose k (elbow / silhouette); scale; round clusters only.</span></li>
+      <li><b>Scaling needed?</b><span>Yes: k-NN, k-means, SVM, regularised linear, neural nets. No: trees and their ensembles.</span></li>
+      <li><b>Default playbook</b><span>Baseline (logistic) → boosted trees → compare on the right metric → pick by constraints (explainability, latency, data).</span></li>
+    </ul>
+  </section>
+
+  <!-- answers -->
+  <section>
+    <h2><span class="n">A</span>Answers — check only after you've written yours</h2>
+    <h3>D1–D2</h3>
+    <ol class="ans">
+      <li>You can't tell from the raw weights: they're in different units (per €k of income vs. per year of age). Standardise both features (or compare weight × the feature's standard deviation), then compare.</li>
+      <li>Perfect multicollinearity: the weights aren't uniquely defined — the fit fails or returns arbitrary, unstable values; predictions may be fine but interpretation is meaningless. Drop one of the three, or use ridge regularisation.</li>
+      <li>Odds are multiplied by e^0.7 ≈ 2.0 — each extra month roughly doubles the odds of default. z = 0 → p = σ(0) = 0.5.</li>
+      <li>No — it only adds separate effects of age and utilisation. Add an interaction feature (young × high utilisation), or bin the features, or use a tree-based model, which finds interactions itself.</li>
+      <li>Explainability and regulation: every decision can be traced to a few weights and explained to the customer and the regulator; it's stable, well calibrated and easy to monitor. The accuracy gain from boosting may not be worth the governance cost. (Many banks use boosting as a challenger, or with SHAP explanations.)</li>
+    </ol>
+    <h3>D3–D6</h3>
+    <ol class="ans">
+      <li>Bias rises, variance falls. At k = 1,000 (all the data) it predicts the overall majority class / mean for everyone — the constant model.</li>
+      <li>Income: its numbers are thousands of times larger than age, so differences in income swamp the distance. Standardise first.</li>
+      <li>It assumes features are independent given the class. Transaction amount and merchant category; or "new device" and "new IP address" — strongly related, so naive Bayes double-counts the same evidence and becomes over-confident.</li>
+      <li>Parent: 1 − (0.8² + 0.2²) = 0.32. Left (60/0): 0. Right (20/20): 1 − (0.25 + 0.25) = 0.5. Weighted: 0.6 × 0 + 0.4 × 0.5 = 0.20. Impurity falls from 0.32 to 0.20 — a good split (it isolated 60 certain non-defaulters).</li>
+      <li>Random forest: it averages many trees trained on resampled data, so the instability (variance) of any single tree cancels out.</li>
+      <li>To decorrelate the trees. If one feature is dominant, every tree would split on it first and the trees would be near-copies; averaging near-copies doesn't reduce variance. Random subsets force diversity.</li>
+      <li>Overfitting: after round 300 the model is fitting noise in the training data. Use early stopping (keep the model at round ~300), and/or lower the learning rate, reduce depth, add subsampling / regularisation.</li>
+      <li>Importance measures how much the <em>model</em> relies on X to predict, not causation. X may be a proxy for something else, or share importance with correlated features. To claim an effect you need an experiment (Module 2).</li>
+    </ol>
+    <h3>D7–D11</h3>
+    <ol class="ans">
+      <li>A weighted sum of weighted sums is still a weighted sum — without non-linearities any depth collapses into a single linear model. Activations let the network represent curves and interactions.</li>
+      <li>Gradient boosting: on small/medium tabular data it usually matches or beats neural nets with far less tuning; 5,000 rows is too little for a network to learn useful representations; faster to train, easier to explain (SHAP).</li>
+      <li>A convolutional neural network (or a pre-trained vision / OCR model, fine-tuned). Pixels have spatial structure — a "3" is a "3" wherever it sits — which convolutions exploit; a forest treats every pixel as an unrelated column and needs to relearn the pattern at every position.</li>
+      <li>k-means starts from random centres and only finds a local optimum. Run it many times and keep the best (lowest within-cluster distance), use k-means++ initialisation, and check whether the clusters are stable — if not, the structure may not be real.</li>
+      <li>Need scaling: k-NN, logistic regression with L2, k-means, neural network. Don't: random forest, XGBoost.</li>
+      <li>Two million sparse columns: memory, slow training, and most categories have too few examples to learn from. Alternatives: target encoding (replace the ID by its historical outcome rate, computed without leakage), hashing, grouping rare values, or learned embeddings; or CatBoost's native handling.</li>
+      <li>(a) Logistic regression (scorecard) or a shallow tree — each decision explainable. (b) Gradient-boosted trees — best accuracy on tabular data and fast at inference; logistic regression if the latency budget were tighter. (c) Text classification: a fine-tuned language model / LLM, with naive Bayes or logistic regression on bag-of-words as the baseline. (d) Unsupervised anomaly detection (isolation forest, distance in embedding space) feeding human review. (e) Nearest neighbours in an embedding space (e.g. customer embeddings), or clustering.</li>
+      <li>5⁶ = 15,625 models (× the number of CV folds). Usually only two or three hyperparameters really matter; a grid wastes most runs varying the unimportant ones, while random search tries a new value of the important ones on every run.</li>
+    </ol>
+  </section>
+
+  <p class="colophon">
+    Tomás Zanchetti · Revolut ML Basics · Module 4 — The models · 05/10/2026<br>
+    That completes the four modules. Next: Revolut-shaped cases on each module, the question bank built from their own links, and mock interviews.
+  </p>
+
+</div>
+</body>
+</html>

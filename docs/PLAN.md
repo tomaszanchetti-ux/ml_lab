@@ -28,7 +28,9 @@ Decision 29/09: one module per topic, from zero upwards, concepts shown in real 
 | 1 | **Probability** — rules, random variables, Bernoulli · Binomial · Poisson · Normal · heavy tails | 2 | ✅ PDF (29/09) + video (05/10) |
 | 2 | **Statistics** — population vs. sample, bias (all kinds), sampling, CLT, confidence intervals, tests, p-values, power, A/B end to end | 3 | ✅ PDF + video (05/10) |
 | 3 | **Maths for ML** — what a model is, loss, gradient descent, bias–variance, regularisation, validation, leakage, metrics (confusion matrix, precision/recall, ROC/PR-AUC) | 1 | ✅ PDF + video (05/10) |
-| 4 | **The models** — linear/logistic regression, regularisation, metrics, kNN, naive Bayes, trees, random forest, gradient boosting, SVM, neural nets, k-means — pros/cons and when | 4 | ⏳ 05/10 |
+| 4 | **The models** — linear/logistic regression, k-NN, naive Bayes, trees, random forest, gradient boosting, SVM, neural nets, k-means, data prep — pros/cons and when | 4 | ✅ PDF + video (05/10) |
+
+**Next (6–7/10):** cases per module in chat (Revolut-shaped, strategic) → question bank from their links → mock interviews in English.
 
 ## Track A (old plan, superseded) — Theory (one PDF per module, in `theory/`)
 
