@@ -1,0 +1,304 @@
+/* ---------- precomputed data (seeded so scrubbing is stable) ---------- */
+const flips = (() => { const r = rng(7), a=[]; for(let i=0;i<400;i++) a.push(r()<.5); return a; })();
+const gridOrder = (() => { const r = rng(11), a=[...Array(1000).keys()]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; })();
+const setB = new Set(gridOrder.slice(0,123)), setAB = new Set(gridOrder.slice(0,42));
+const binom = (() => { const r = rng(21), a=[]; for(let s=0;s<320;s++){ const row=[]; let k=0; for(let i=0;i<20;i++){ const d=r()<.2; row.push(d); if(d)k++; } a.push({row,k}); } return a; })();
+function binomPMF(n,p,k){ let cmb=1; for(let i=0;i<k;i++) cmb = cmb*(n-i)/(i+1); return cmb*Math.pow(p,k)*Math.pow(1-p,n-k); }
+function poisSample(r, lam){ const L=Math.exp(-lam); let k=0,p=1; do { k++; p*=r(); } while(p>L); return k-1; }
+const pois = (() => { const r = rng(33), a=[]; for(let i=0;i<48;i++){ const k=poisSample(r,2), ev=[]; for(let j=0;j<k;j++) ev.push(r()); a.push({k,ev}); } return a; })();
+const clus = (() => { const r = rng(44), a=[]; for(let i=0;i<48;i++){ const burst = r()<.14; const k = burst ? 9+Math.floor(r()*5) : (r()<.55?0:1); const ev=[]; for(let j=0;j<k;j++) ev.push(burst ? .3+r()*.4 : r()); a.push({k,ev}); } return a; })();
+const stats = arr => { const n=arr.length; if(!n) return {m:0,v:0}; const m=arr.reduce((s,x)=>s+x,0)/n; const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/n; return {m,v}; };
+const logn = (() => { const r = rng(55), a=[]; for(let i=0;i<3000;i++) a.push(Math.exp(3.5+1.1*gauss(r))); return a; })();
+const lognMed = (() => { const s=[...logn].sort((a,b)=>a-b); return s[1500]; })(), lognMean = logn.reduce((s,x)=>s+x,0)/logn.length;
+const portA = (() => { const r=rng(66), a=[]; for(let i=0;i<60;i++) a.push(2400+150*gauss(r)); return a; })();
+const portB = (() => { const r=rng(67), a=[]; for(let i=0;i<60;i++) a.push(r()<.85 ? 600+150*gauss(r) : 12600+800*gauss(r)); return a; })();
+
+const scat = (() => { const mk=(seed,fn)=>{ const r=rng(seed), a=[]; for(let i=0;i<90;i++){ const x=r(); a.push([x, clamp(fn(x,r))]); } return a; };
+  return [ mk(71,(x,r)=> x*.8+.1+.07*gauss(r)), mk(72,(x,r)=> .9-x*.75+.09*gauss(r)), mk(73,(x,r)=> .5+.2*gauss(r)), mk(74,(x,r)=> 4*(x-.5)*(x-.5)*.85+.07+.04*gauss(r)) ]; })();
+
+/* ---------- shared grid of 1,000 customers ---------- */
+const GX=70, GY=128, GS=17.6, GC=40, GR=25;
+function gridPos(i){ return [GX + (i%GC)*GS + 8, GY + Math.floor(i/GC)*GS + 8]; }
+
+/* ---------- scenes ---------- */
+const S = [];
+
+S.push({ title:'Probability — the visual tour', dur:8,
+  cap:[[0,'Module one: probability. Sixteen ideas, each one with a picture.'],[4,'Rules first, then random variables, then the distributions.']],
+  draw(t){
+    txt('MODULE 1', 640, 250, {size:26, color:COL.acc, align:'center', mono:true, alpha:A(t,0)});
+    txt('Probability', 640, 340, {size:96, weight:700, align:'center', alpha:A(t,.3)});
+    txt('rules  ·  random variables  ·  Bernoulli  ·  Binomial  ·  Poisson  ·  Normal', 640, 410, {size:26, color:COL.mut, align:'center', alpha:A(t,1.2)});
+    txt('Revolut · Machine Learning 1 (Basics) · 8 October', 640, 470, {size:20, color:COL.faint, align:'center', alpha:A(t,2)});
+  }});
+
+S.push({ title:'Probability = long-run frequency', dur:22,
+  cap:[[0,'Flip a fair coin. After a few flips, the share of heads can be anything.'],[7,'Keep flipping, and the share settles towards one half.'],[13,'That is what a probability is: the fraction of times something happens in the long run.'],[18,'A fraud rate of zero point two percent means two in every thousand transactions.']],
+  draw(t){
+    const n = Math.max(1, Math.floor(400*Math.pow(clamp((t-1)/15),1.8)));
+    let h=0; const px=380, py=150, pw=820, ph=380;
+    strokeRect(px,py,pw,ph,COL.rule); line(px,py+ph/2,px+pw,py+ph/2,COL.faint,1,1.5,[6,6]); txt('0.5', px-12, py+ph/2+6, {size:18,color:COL.mut,align:'right'});
+    txt('1', px-12, py+8, {size:18,color:COL.mut,align:'right'}); txt('0', px-12, py+ph, {size:18,color:COL.mut,align:'right'});
+    txt('share of heads so far', px, py-14, {size:18,color:COL.mut}); txt('number of flips →', px+pw, py+ph+28, {size:18,color:COL.mut,align:'right'});
+    c.save(); c.strokeStyle=COL.acc; c.lineWidth=3; c.beginPath();
+    for(let i=0;i<n;i++){ if(flips[i]) h++; const x=px + (i/399)*pw, y=py+ph - (h/(i+1))*ph; i?c.lineTo(x,y):c.moveTo(x,y); } c.stroke(); c.restore();
+    const last = flips[n-1];
+    dot(190, 300, 86, last?COL.yel:COL.faint); txt(last?'H':'T', 190, 328, {size:84, weight:700, align:'center', color:COL.bg});
+    txt(`flips: ${n}`, 190, 440, {size:26, align:'center'}); txt(`heads: ${(h/n*100).toFixed(1)} %`, 190, 478, {size:26, align:'center', color:COL.acc});
+  }});
+
+S.push({ title:'AND multiplies — a fraction of a fraction', dur:28,
+  cap:[[0,'A thousand customers.'],[4,'Ten percent of them log in from a new device: one hundred.'],[11,'Of those hundred, two percent are fraudsters: two people.'],[17,'New device AND fraud: ten percent times two percent. Two in a thousand.'],[23,'AND always shrinks the group, so it multiplies. Adding would give a hundred and twenty — more than the hundred we started from.']],
+  draw(t){
+    const a1=A(t,4,1.2), a2=A(t,11,1);
+    for(let i=0;i<1000;i++){ const [x,y]=gridPos(i); const inB = (i%GC)<4, red = (i===41||i===522);
+      let col=COL.faint, al=1, r=5; if(inB && a1>0){ col=COL.acc; al=lerp(1,1,a1); } if(!inB && a1>0) al=lerp(1,.35,a1); if(red && a2>0){ col=COL.red; r=5+4*a2; al=1; }
+      dot(x,y,r,col,al); }
+    const X=810;
+    txt('1,000 customers', X, 170, {size:30, weight:600, alpha:A(t,0)});
+    txt('× 10 %  new device', X, 235, {size:28, color:COL.acc, alpha:A(t,4)}); txt('= 100', X+330, 235, {size:28, color:COL.acc, weight:600, alpha:A(t,5)});
+    txt('×  2 %  fraud', X, 290, {size:28, color:COL.red, alpha:A(t,11)}); txt('= 2', X+330, 290, {size:28, color:COL.red, weight:600, alpha:A(t,12)});
+    line(X,318,X+400,318,COL.rule,A(t,17));
+    txt('P(A and B) = P(A) × P(B | A)', X, 362, {size:25, mono:true, alpha:A(t,17)});
+    txt('0.10 × 0.02 = 0.002', X, 404, {size:28, mono:true, weight:600, color:COL.green, alpha:A(t,18)});
+    txt('0.10 + 0.02 = 0.12  →  120 ?', X, 470, {size:24, mono:true, color:COL.mut, alpha:A(t,23)});
+    if(t>24.5) line(X-4,462,X+372,462,COL.red,A(t,24.5,.4),3);
+    txt('"and" can only shrink', X, 512, {size:22, color:COL.mut, alpha:A(t,25)});
+  }});
+
+S.push({ title:'OR adds — minus the overlap', dur:18,
+  cap:[[0,'Thirty percent of customers pay by card. Twenty percent pay by transfer.'],[5,'Card OR transfer: add the two groups.'],[9,'But five percent do both, and adding counted them twice.'],[13,'So subtract the overlap once. Thirty plus twenty minus five: forty-five percent.']],
+  draw(t){
+    const cx1=420, cx2=620, cy=345, r=170;
+    c.save(); c.globalAlpha=A(t,0)*.55; c.fillStyle=COL.acc; c.beginPath(); c.arc(cx1,cy,r,0,7); c.fill(); c.restore();
+    c.save(); c.globalAlpha=A(t,1.5)*.55; c.fillStyle=COL.green; c.beginPath(); c.arc(cx2,cy,r*.82,0,7); c.fill(); c.restore();
+    if(t>9){ c.save(); c.beginPath(); c.arc(cx1,cy,r,0,7); c.clip(); c.globalAlpha=A(t,9)*(.55+.35*Math.sin(t*6)); c.fillStyle=COL.yel; c.beginPath(); c.arc(cx2,cy,r*.82,0,7); c.fill(); c.restore(); }
+    txt('Card', cx1-90, cy-20, {size:26, weight:600, align:'center', alpha:A(t,0)}); txt('30 %', cx1-90, cy+18, {size:30, align:'center', alpha:A(t,0)});
+    txt('Transfer', cx2+78, cy-20, {size:26, weight:600, align:'center', alpha:A(t,1.5)}); txt('20 %', cx2+78, cy+18, {size:30, align:'center', alpha:A(t,1.5)});
+    txt('both', (cx1+cx2)/2+18, cy-10, {size:20, align:'center', color:COL.bg, weight:700, alpha:A(t,9)}); txt('5 %', (cx1+cx2)/2+18, cy+18, {size:24, align:'center', color:COL.bg, weight:700, alpha:A(t,9)});
+    const X=850;
+    txt('P(A or B) =', X, 250, {size:26, mono:true, alpha:A(t,5)});
+    txt('0.30 + 0.20', X, 300, {size:30, mono:true, alpha:A(t,5.5)});
+    txt('− 0.05', X+215, 300, {size:30, mono:true, color:COL.yel, alpha:A(t,13)});
+    txt(t<13 ? '= 0.50 ?' : '= 0.45', X, 356, {size:34, mono:true, weight:700, color:t<13?COL.mut:COL.green, alpha:A(t,6.5)});
+    txt('P(A) + P(B) − P(A and B)', X, 430, {size:22, mono:true, color:COL.mut, alpha:A(t,13.5)});
+  }});
+
+S.push({ title:'The complement — and what "independent" means', dur:27,
+  cap:[[0,'Sometimes the easiest route is the opposite event.'],[4,'Two independent checks, each failing five percent of the time. What is the chance that at least one fails?'],[10,'At least one equals one minus none. Both pass: ninety-five percent times ninety-five percent.'],[16,'So nine point seven five percent. Not ten: adding would count the corner where both fail twice.'],[21,'Independent means that knowing one tells you nothing about the other. Then, and only then, you multiply the plain probabilities.']],
+  draw(t){
+    const x0=110,y0=140,sz=420, f=sz*.05*2.2;   // fail strips drawn 2.2× for visibility
+    rect(x0,y0,sz,sz,'#1E3A32',A(t,4)); txt('both pass', x0+(sz-f)/2, y0+(sz-f)/2-6, {size:28, align:'center', color:COL.green, weight:600, alpha:A(t,10)}); txt('0.95 × 0.95 = 0.9025', x0+(sz-f)/2, y0+(sz-f)/2+30, {size:22, align:'center', mono:true, color:COL.green, alpha:A(t,11)});
+    rect(x0+sz-f,y0,f,sz,COL.red,A(t,5)*.8); rect(x0,y0+sz-f,sz,f,COL.red,A(t,6)*.8); rect(x0+sz-f,y0+sz-f,f,f,COL.yel,A(t,16));
+    txt('check 1 fails (5 %)', x0+sz+14, y0+60, {size:19, color:COL.red, alpha:A(t,5)}); txt('check 2 fails (5 %)', x0+10, y0+sz+26, {size:19, color:COL.red, alpha:A(t,6)});
+    txt('both fail', x0+sz+14, y0+sz-14, {size:19, color:COL.yel, alpha:A(t,16)});
+    const X=760;
+    txt('P(at least one)', X, 200, {size:26, mono:true, alpha:A(t,10)}); txt('= 1 − P(none)', X, 242, {size:26, mono:true, alpha:A(t,10.5)});
+    txt('= 1 − 0.9025', X, 284, {size:26, mono:true, alpha:A(t,12)}); txt('= 9.75 %', X, 338, {size:40, mono:true, weight:700, color:COL.green, alpha:A(t,16)});
+    txt('0.05 + 0.05 = 10 % ?', X, 396, {size:22, mono:true, color:COL.mut, alpha:A(t,17)}); if(t>18) line(X-4,388,X+290,388,COL.red,A(t,18,.4),3);
+    txt('independent:  P(B | A) = P(B)', X, 470, {size:24, mono:true, color:COL.acc, alpha:A(t,21)});
+    txt('then  P(A and B) = P(A) × P(B)', X, 508, {size:22, mono:true, color:COL.mut, alpha:A(t,23)});
+  }});
+
+S.push({ title:'Conditional — B becomes the whole world', dur:24,
+  cap:[[0,'What is the default rate among customers who were late last month?'],[5,'Given B means: throw away everyone else. The world is now these hundred and twenty-three.'],[12,'Inside that world, forty-two defaulted.'],[16,'Forty-two out of one hundred and twenty-three: thirty-four percent. Not forty-two out of a thousand.'],[21,'A feature is useful exactly when this number differs from the base rate.']],
+  draw(t){
+    const a1=A(t,5,1.5), a2=A(t,12,1);
+    for(let i=0;i<1000;i++){ const [x,y]=gridPos(i); const inB=setB.has(i), red=setAB.has(i);
+      let col=COL.faint, al=1, r=5; if(inB){ col = (red && a2>0) ? COL.red : COL.acc; r = 5 + 1.5*a1 + (red?2*a2:0); } else al = lerp(1,.08,a1);
+      dot(x,y,r,col,al); }
+    const X=810;
+    txt('B = late last month', X, 170, {size:28, color:COL.acc, weight:600, alpha:A(t,2)}); txt('123 customers', X, 208, {size:26, color:COL.acc, alpha:A(t,5)});
+    txt('A and B = late and defaulted', X, 270, {size:24, color:COL.red, alpha:A(t,12)}); txt('42 customers', X, 306, {size:26, color:COL.red, alpha:A(t,12.5)});
+    line(X,334,X+410,334,COL.rule,A(t,16));
+    txt('P(A | B) = P(A and B) / P(B)', X, 376, {size:24, mono:true, alpha:A(t,16)});
+    txt('42 / 123 = 34 %', X, 420, {size:32, mono:true, weight:700, color:COL.green, alpha:A(t,17)});
+    txt('42 / 1,000 = 4.2 %', X, 468, {size:24, mono:true, color:COL.mut, alpha:A(t,18.5)});
+    if(t>19.3) line(X-4,460,X+290,460,COL.red,A(t,19.3,.4),3);
+    txt('base rate 22 %  →  34 % given late', X, 524, {size:22, color:COL.mut, alpha:A(t,21)});
+  }});
+
+S.push({ title:'Bayes — why most alerts are false', dur:46,
+  cap:[[0,'One hundred thousand transactions. Fraud is zero point two percent: that thin red line on the left.'],[7,'The model catches ninety percent of fraud: one hundred and eighty.'],[12,'It also flags two percent of legitimate transactions. Two percent of a huge number: almost two thousand.'],[20,'Now stand inside the flagged world. One hundred and eighty real frauds among two thousand one hundred and seventy-six alerts.'],[27,'Probability of fraud given a flag: eight percent. A ninety percent detector, wrong ninety-two percent of the time it fires.'],[33,'The first lever is the false-alarm rate. Cut it from two percent to zero point two, and precision jumps to forty-seven percent.'],[39,'The second lever is the prior. Point the same model at a risky segment, where five percent is fraud, and a flag now means seventy percent. Prior times likelihood, divided by evidence.']],
+  draw(t){
+    const x0=70,y0=150,w=640,h=390, fw=3;
+    rect(x0+fw,y0,w-fw,h,'#22323A',A(t,0)); rect(x0,y0,fw,h,COL.red,A(t,0));
+    txt('99,800 legitimate', x0+w/2, y0+h/2-50, {size:26, align:'center', color:COL.mut, alpha:A(t,1)});
+    arrow(x0-34,y0-26,x0-2,y0+12,COL.red,A(t,2)); txt('200 fraud (0.2 %)', x0-40, y0-34, {size:20, color:COL.red, alpha:A(t,2)});
+    txt('100,000 transactions', x0+w, y0-14, {size:18, color:COL.mut, align:'right', alpha:A(t,0)});
+    txt('(yellow strip drawn 3× its true height so you can see it)', x0+w, y0+h+24, {size:15, color:COL.faint, align:'right', alpha:A(t,13)});
+    rect(x0-3,y0,fw+6,h*.9,COL.red,A(t,7)*.9); txt('180 flagged', x0+16, y0+40, {size:20, color:COL.red, weight:600, alpha:A(t,8)});
+    const fh=h*.02*3;  // drawn 3× taller than true scale so it is visible
+    rect(x0+fw,y0+h-fh,w-fw,fh,COL.yel,A(t,12)); txt('1,996 false alarms  (2 % of 99,800)', x0+w/2, y0+h-fh-14, {size:22, align:'center', color:COL.yel, weight:600, alpha:A(t,13)});
+    const X=780, a=A(t,20,1);
+    txt('The flagged world', X, 180, {size:26, weight:600, alpha:a}); txt('2,176 alerts', X, 214, {size:22, color:COL.mut, alpha:a});
+    const bw=430, rw=bw*180/2176; rect(X,236,bw,56,COL.yel,a); rect(X,236,rw,56,COL.red,a);
+    txt('180', X+rw/2, 320, {size:18, color:COL.red, align:'center', alpha:a}); txt('1,996', X+rw+(bw-rw)/2, 320, {size:18, color:COL.yel, align:'center', alpha:a});
+    txt('P(fraud | flag) = 180 / 2,176', X, 380, {size:23, mono:true, alpha:A(t,27)});
+    txt('= 8.3 %', X, 432, {size:44, mono:true, weight:700, color:COL.green, alpha:A(t,28)});
+    txt('recall 90 %  ≠  precision 8 %', X, 474, {size:21, color:COL.mut, alpha:A(t,29.5)});
+    const b=A(t,33,1); if(b>0){ rect(X,498,bw,40,COL.panel,b,6); strokeRect(X,498,bw,40,COL.rule,b,1.5,6); txt('false alarms 2 % → 0.2 %   ⇒   precision 47 %', X+bw/2, 525, {size:19, align:'center', color:COL.acc, alpha:b}); }
+    const b2=A(t,39,1); if(b2>0){ rect(X,548,bw,40,COL.panel,b2,6); strokeRect(X,548,bw,40,COL.rule,b2,1.5,6); txt('risky segment, prior 5 %   ⇒   precision 70 %', X+bw/2, 575, {size:19, align:'center', color:COL.yel, alpha:b2}); }
+  }});
+
+S.push({ title:'Random variables — discrete and continuous', dur:28,
+  cap:[[0,'A random variable is a number that depends on chance. There are two kinds.'],[4,'Discrete: separate values, like the number of defaults. Each value has its own probability, and the bars add up to one.'],[11,'Continuous: any value in a range, like an amount. Now probability is the area under a curve.'],[17,'The chance of exactly twelve euros thirty-seven is zero. You ask for a range instead.'],[22,'The cumulative curve is the running total. Where it crosses one half, you have the median.']],
+  draw(t){
+    const by=520;
+    txt('DISCRETE — probability of each value (PMF)', 80, 150, {size:19, color:COL.acc, mono:true, alpha:A(t,4)});
+    for(let k=0;k<=10;k++){ const pk=binomPMF(10,.3,k), a=A(t,4+k*.25,.5); rect(80+k*40, by-pk*1150*a, 30, pk*1150*a, COL.acc, .85); txt(String(k), 95+k*40, by+24, {size:17, align:'center', color:COL.mut, alpha:A(t,4)}); }
+    line(72,by,530,by,COL.rule,A(t,4)); txt('number of defaults', 300, by+50, {size:17, align:'center', color:COL.mut, alpha:A(t,4)}); txt('Σ bars = 1', 400, 240, {size:22, mono:true, color:COL.mut, alpha:A(t,8)});
+    const px=640, pw=540, f = x => { const z=(x-.42)/.17; return Math.exp(-.5*z*z)*(1+.9*x); }, X = u => px+u*pw, Y = u => by - f(u)*235;
+    const a=A(t,11,1.2);
+    txt('CONTINUOUS — density (PDF)', px, 150, {size:19, color:COL.green, mono:true, alpha:a});
+    if(t>17){ const sa=A(t,17,1); c.save(); c.globalAlpha=sa*.45; c.fillStyle=COL.green; c.beginPath(); c.moveTo(X(.6),by); for(let u=.6;u<=.74;u+=.005) c.lineTo(X(u),Y(u)); c.lineTo(X(.74),by); c.fill(); c.restore(); txt('P(a < X < b) = area', X(.76), by-120, {size:20, mono:true, color:COL.green, alpha:sa}); txt('a', X(.6), by+24, {size:18, align:'center', color:COL.mut, alpha:sa}); txt('b', X(.74), by+24, {size:18, align:'center', color:COL.mut, alpha:sa}); }
+    c.save(); c.globalAlpha=a; c.strokeStyle=COL.green; c.lineWidth=3.5; c.beginPath(); for(let u=0;u<=a;u+=.005){ u===0?c.moveTo(X(u),Y(u)):c.lineTo(X(u),Y(u)); } c.stroke(); c.restore();
+    line(px,by,px+pw,by,COL.rule,a); txt('amount →', px+pw, by+50, {size:17, align:'right', color:COL.mut, alpha:a});
+    if(t>22){ const ca=A(t,22,1.5); let tot=0; const N=200, cum=[]; for(let i=0;i<=N;i++){ tot+=f(i/N); cum.push(tot); } let med=0; for(let i=0;i<=N;i++){ if(cum[i]/tot>=.5){ med=i/N; break; } }
+      c.save(); c.globalAlpha=ca; c.strokeStyle=COL.yel; c.lineWidth=3; c.beginPath(); for(let i=0;i<=N*ca;i++){ const x=X(i/N), y=by-(cum[i]/tot)*300; i?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); c.restore();
+      line(px,by-150,px+pw,by-150,COL.yel,ca*.6,1.5,[5,5]); txt('0.5', px-10, by-144, {size:17, align:'right', color:COL.yel, alpha:ca}); txt('CDF: P(X ≤ x)', px+pw-150, by-312, {size:20, mono:true, color:COL.yel, alpha:ca});
+      line(X(med),by,X(med),by-150,COL.yel,A(t,24),2); txt('median', X(med), by+24, {size:18, align:'center', color:COL.yel, alpha:A(t,24)}); }
+  }});
+
+S.push({ title:'Expectation and variance', dur:36,
+  cap:[[0,'Two numbers summarise a random variable. Take the profit on one loan.'],[5,'Ninety-six percent of the time you earn eighty euros. Four percent of the time you lose six hundred.'],[11,'Expected value: each outcome weighted by its probability. Fifty-two euros eighty — a number that never actually happens.'],[17,'Variance is the other half. Two portfolios with the same average loss.'],[22,'One is steady. The other is fine most months and terrible in a few. Expectation sets the price; variance sets the capital.'],[28,'Two rules. Expected values always add up. Variances add only when things are independent — correlated loans are riskier than they look.']],
+  draw(t){
+    const X=80, f = A(t,17,1), top = 1-f*.0;
+    c.save(); c.globalAlpha = 1 - .0*f;
+    txt('Profit on a €1,000 loan', X, 160, {size:24, color:COL.mut, alpha:A(t,0)});
+    const bx=X, sc=0.42;
+    rect(bx, 186, 0.96*520, 44, COL.green, A(t,5)*.85); txt('96 %   repaid   +€80', bx+14, 216, {size:22, color:COL.bg, weight:600, alpha:A(t,5)});
+    rect(bx, 242, Math.max(0.04*520,22), 44, COL.red, A(t,7)*.9); txt('4 %   default   −€600', bx+40, 272, {size:22, color:COL.red, weight:600, alpha:A(t,7)});
+    txt('0.96 × 80', 700, 216, {size:24, mono:true, alpha:A(t,11)}); txt('= +76.8', 870, 216, {size:24, mono:true, color:COL.green, alpha:A(t,11.5)});
+    txt('0.04 × −600', 700, 272, {size:24, mono:true, alpha:A(t,12)}); txt('= −24.0', 870, 272, {size:24, mono:true, color:COL.red, alpha:A(t,12.5)});
+    line(700,290,1000,290,COL.rule,A(t,13)); txt('E[profit] = €52.8', 700, 330, {size:30, mono:true, weight:700, color:COL.acc, alpha:A(t,13.5)});
+    c.restore();
+    const g2=A(t,28,1);
+    if(f>0){ c.save(); c.globalAlpha=1-.88*g2; const ax=120, aw=1040, toX = v => ax + clamp(v/14000)*aw;
+      [['Portfolio A — steady', portA, 420, COL.acc],['Portfolio B — same average, fat tail', portB, 520, COL.red]].forEach(([lab,arr,y,col],k)=>{
+        const al = A(t,17+k*2.5,1); txt(lab, ax, y-34, {size:21, color:col, weight:600, alpha:al}); line(ax,y,ax+aw,y,COL.rule,al);
+        arr.forEach((v,i)=> dot(toX(v), y - 4 - (i%6)*4, 4.5, col, al*.8));
+        line(toX(2400), y-32, toX(2400), y+10, COL.ink, al, 2, [4,4]); });
+      txt('mean €2,400', toX(2400)+8, 548, {size:18, color:COL.mut, alpha:A(t,22)}); txt('monthly loss →', ax+aw, 566, {size:17, color:COL.mut, align:'right', alpha:f});
+      c.restore(); }
+    if(g2>0){ rect(170,392,940,150,COL.panel,g2,10); strokeRect(170,392,940,150,COL.rule,g2,1.5,10); txt('E[X + Y] = E[X] + E[Y]', 210, 446, {size:28, mono:true, color:COL.green, alpha:g2}); txt('always', 760, 446, {size:24, color:COL.green, alpha:g2}); txt('Var(X + Y) = Var(X) + Var(Y)', 210, 506, {size:28, mono:true, color:COL.yel, alpha:A(t,30)}); txt('only if independent', 760, 506, {size:24, color:COL.yel, alpha:A(t,30)}); }
+  }});
+
+S.push({ title:'Correlation — do two variables move together?', dur:26,
+  cap:[[0,'Do two variables move together? Correlation answers with a number between minus one and plus one.'],[6,'Close to plus one, they rise together. Close to minus one, one rises as the other falls.'],[12,'Around zero: no straight-line relationship.'],[16,'But zero does not mean unrelated. A perfect curve can have a correlation of zero.'],[21,'And correlation is not causation. Ice-cream sales and drownings both rise in summer.']],
+  draw(t){
+    const labs=[['r ≈ +0.9','rise together',COL.green,1],['r ≈ −0.8','one up, one down',COL.red,6],['r ≈ 0','no relation',COL.mut,12],['r ≈ 0','but clearly related!',COL.yel,16]];
+    labs.forEach(([l1,l2,col,st],i)=>{ const x0=70+i*292, y0=160, sz=250, a=A(t,st,1); strokeRect(x0,y0,sz,sz,COL.rule,a,1.5,6);
+      scat[i].forEach(([x,y],j)=> dot(x0+14+x*(sz-28), y0+sz-14-y*(sz-28), 4, col, a*A(t,st+j*.012,.3)*.9));
+      txt(l1, x0+sz/2, y0+sz+44, {size:30, weight:700, align:'center', mono:true, color:col, alpha:a}); txt(l2, x0+sz/2, y0+sz+76, {size:19, align:'center', color:COL.mut, alpha:a}); });
+    txt('corr(X, Y) = Cov(X, Y) / (σx · σy)        measures straight-line association only', 640, 570, {size:19, align:'center', mono:true, color:COL.faint, alpha:A(t,3)});
+  }});
+
+S.push({ title:'Bernoulli — one yes/no trial', dur:18,
+  cap:[[0,'Bernoulli: a single event that happens with probability p, or does not.'],[5,'One transaction: fraud or not. One customer: default or not. Every binary classifier predicts a Bernoulli variable.'],[11,'Its variance is p times one minus p. Largest at fifty-fifty, tiny when the event is rare.']],
+  draw(t){
+    const p = t<5 ? .5 : lerp(.5,.03, ease(clamp((t-5)/7)));
+    const bx=150, by=520, bh=340;
+    rect(bx,by-bh*(1-p),150,bh*(1-p),COL.faint); rect(bx+210,by-bh*p,150,Math.max(bh*p,2),COL.red);
+    txt('X = 0', bx+75, by+34, {size:24, align:'center', color:COL.mut}); txt('X = 1', bx+285, by+34, {size:24, align:'center', color:COL.red});
+    txt((1-p).toFixed(2), bx+75, by-bh*(1-p)-12, {size:24, align:'center'}); txt(p.toFixed(2), bx+285, by-bh*p-12, {size:24, align:'center', color:COL.red});
+    line(bx-20,by,bx+380,by,COL.rule);
+    const px=700, py=200, pw=440, ph=260; strokeRect(px,py,pw,ph,COL.rule,A(t,11));
+    c.save(); c.globalAlpha=A(t,11); c.strokeStyle=COL.acc; c.lineWidth=3; c.beginPath(); for(let i=0;i<=100;i++){ const q=i/100, x=px+q*pw, y=py+ph-(q*(1-q)/.25)*ph*.92; i?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); c.restore();
+    dot(px+p*pw, py+ph-(p*(1-p)/.25)*ph*.92, 9, COL.yel, A(t,11));
+    txt('variance = p(1 − p)', px, py-16, {size:22, mono:true, alpha:A(t,11)}); txt('p →', px+pw, py+ph+28, {size:18, color:COL.mut, align:'right', alpha:A(t,11)});
+    txt(`p = ${p.toFixed(2)}     mean = p     var = ${(p*(1-p)).toFixed(3)}`, px, 540, {size:22, mono:true, color:COL.mut});
+  }});
+
+S.push({ title:'Binomial — count the yeses in n trials', dur:34,
+  cap:[[0,'Now take twenty loans, each with a twenty percent chance of default, independent.'],[5,'Count the defaults. Do it again. And again.'],[11,'The counts pile up around n times p: four defaults. That is the binomial distribution.'],[18,'Mean n p, variance n p times one minus p. Seeing ten defaults here would mean something changed.'],[23,'One warning: if loans are correlated, the real spread is wider than this.'],[27,'A quick one to do in your head. Five transactions, each with a ten percent chance of a dispute. At least one dispute is one minus zero point nine to the fifth: forty-one percent.']],
+  draw(t){
+    const n = Math.max(1, Math.floor(320*Math.pow(clamp((t-2)/17),1.5)));
+    const cur = binom[n-1];
+    txt('one portfolio of 20 loans', 80, 160, {size:22, color:COL.mut});
+    cur.row.forEach((d,i)=> rect(80+i*30, 178, 24, 24, d?COL.red:COL.faint, 1, 4));
+    txt(`defaults: ${cur.k}`, 720, 197, {size:24, color:COL.red, weight:600}); txt(`portfolios drawn: ${n}`, 900, 197, {size:22, color:COL.mut});
+    const hx=120, hy=540, bw=74, counts=Array(13).fill(0); for(let i=0;i<n;i++) counts[Math.min(binom[i].k,12)]++;
+    const mx=Math.max(...counts,1), sc=Math.min(270/mx, 14);
+    for(let k=0;k<=12;k++){ rect(hx+k*bw, hy-counts[k]*sc, bw-10, counts[k]*sc, k===cur.k?COL.red:COL.acc, k===cur.k?1:.75); txt(String(k), hx+k*bw+(bw-10)/2, hy+26, {size:19, align:'center', color:COL.mut}); }
+    line(hx-10,hy,hx+13*bw,hy,COL.rule); txt('number of defaults in the portfolio', hx+13*bw/2, hy+54, {size:18, align:'center', color:COL.mut});
+    const a=A(t,18,1); if(a>0){ c.save(); c.globalAlpha=a; c.strokeStyle=COL.yel; c.lineWidth=2.5; c.beginPath(); for(let k=0;k<=12;k++){ const y=hy - binomPMF(20,.2,k)*n*sc, x=hx+k*bw+(bw-10)/2; k?c.lineTo(x,y):c.moveTo(x,y); } c.stroke(); for(let k=0;k<=12;k++) dot(hx+k*bw+(bw-10)/2, hy - binomPMF(20,.2,k)*n*sc, 5, COL.yel); c.restore();
+      txt('mean = np = 4      sd = √(np(1−p)) ≈ 1.8', 1160, 270, {size:22, mono:true, align:'right', color:COL.yel, alpha:a}); }
+    const w2=A(t,27,1); if(w2>0){ rect(700,300,470,112,COL.panel,w2,8); strokeRect(700,300,470,112,COL.rule,w2,1.5,8); txt('n = 5, p = 0.1', 722, 336, {size:20, mono:true, color:COL.mut, alpha:w2}); txt('P(≥ 1) = 1 − 0.9⁵ = 41 %', 722, 372, {size:24, mono:true, color:COL.green, alpha:A(t,29)}); txt('P(X = k) = C(n,k) pᵏ (1−p)ⁿ⁻ᵏ', 722, 400, {size:17, mono:true, color:COL.faint, alpha:w2}); }
+  }});
+
+S.push({ title:'Poisson — rare events per window', dur:30,
+  cap:[[0,'Poisson counts events in a window of time: disputes per merchant per month.'],[5,'Events arrive independently, at a steady average rate. Here, two a month.'],[11,'The fingerprint: the mean and the variance are the same number.'],[16,'Now a different merchant. A similar average, but the events come in bursts.'],[22,'Variance far above the mean. That is over-dispersion: events are not independent. Look for a fraud ring or a bug.']],
+  draw(t){
+    const second = t>=16, data = second?clus:pois, tt = second ? t-16 : t, col = second?COL.red:COL.acc;
+    const n = Math.max(1, Math.floor(48*clamp((tt-1)/(second?5:9))));
+    const x0=70, ww=47.5, rows=[170,250];
+    txt(second?'Merchant B — bursts':'Merchant A — independent events, λ = 2 per month', x0, 140, {size:22, color:col, weight:600});
+    for(let i=0;i<48;i++){ const r=Math.floor(i/24), x=x0+(i%24)*ww, y=rows[r]; strokeRect(x,y,ww-4,54,COL.rule, i<n?1:.4, 1, 3);
+      if(i<n){ data[i].ev.forEach(e => line(x+4+e*(ww-12), y+8, x+4+e*(ww-12), y+46, col, .95, 2.5)); txt(String(data[i].k), x+(ww-4)/2, y+72, {size:15, align:'center', color:COL.mut}); } }
+    const counts=Array(15).fill(0), ks=[]; for(let i=0;i<n;i++){ counts[Math.min(data[i].k,14)]++; ks.push(data[i].k); }
+    const hx=90, hy=560, bw=44, sc=Math.min(170/Math.max(...counts,1), 14);
+    for(let k=0;k<15;k++){ rect(hx+k*bw, hy-counts[k]*sc, bw-8, counts[k]*sc, col, .8); txt(String(k), hx+k*bw+(bw-8)/2, hy+22, {size:16, align:'center', color:COL.mut}); }
+    line(hx-8,hy,hx+15*bw,hy,COL.rule); txt('events in a month', hx+15*bw/2, hy+46, {size:17, align:'center', color:COL.mut});
+    const s=stats(ks); const X=820;
+    txt(`mean      ${s.m.toFixed(1)}`, X, 420, {size:30, mono:true}); txt(`variance  ${s.v.toFixed(1)}`, X, 466, {size:30, mono:true, color: second?COL.red:COL.green});
+    txt(second ? 'variance ≫ mean → clustering' : 'mean ≈ variance → Poisson', X, 520, {size:24, color: second?COL.red:COL.green, weight:600, alpha:A(tt, second?6:10)});
+    txt('P(X = k) = e^(−λ) λᵏ / k!', X, 566, {size:20, mono:true, color:COL.mut, alpha:second?0:A(t,11)});
+  }});
+
+S.push({ title:'Normal — the bell curve', dur:34,
+  cap:[[0,'The normal distribution: symmetric, bell-shaped, described by a mean and a standard deviation.'],[5,'Sixty-eight percent of values fall within one standard deviation.'],[10,'Ninety-five percent within two.'],[14,'Ninety-nine point seven within three.'],[18,'A z-score says how many standard deviations a value is from the mean. Z of two: the top two and a half percent.'],[24,'It is everywhere because averages of almost anything become normal. But single amounts of money do not.'],[29,'To check whether data is normal, look at it: a histogram, the mean close to the median, or a Q-Q plot along the diagonal.']],
+  draw(t){
+    const mu=640, sg=125, base=540, amp=330, f = x => Math.exp(-.5*Math.pow((x-mu)/sg,2));
+    const shade = (k, col, al) => { if(al<=0) return; c.save(); c.globalAlpha=al; c.fillStyle=col; c.beginPath(); c.moveTo(mu-k*sg, base); for(let x=mu-k*sg; x<=mu+k*sg; x+=3) c.lineTo(x, base - f(x)*amp); c.lineTo(mu+k*sg, base); c.fill(); c.restore(); };
+    shade(3, COL.acc, A(t,14)*.18); shade(2, COL.acc, A(t,10)*.25); shade(1, COL.acc, A(t,5)*.4);
+    c.save(); c.strokeStyle=COL.ink; c.lineWidth=3.5; c.beginPath(); for(let x=mu-3.6*sg; x<=mu+3.6*sg; x+=3){ const y=base-f(x)*amp; x===mu-3.6*sg?c.moveTo(x,y):c.lineTo(x,y);} c.stroke(); c.restore();
+    line(mu-3.7*sg,base,mu+3.7*sg,base,COL.rule);
+    for(let k=-3;k<=3;k++){ line(mu+k*sg,base,mu+k*sg,base+8,COL.mut,1,1.5); txt(k===0?'μ':(k>0?`+${k}σ`:`${k}σ`).replace('-','−'), mu+k*sg, base+32, {size:20, align:'center', color:COL.mut}); }
+    txt('68 %', mu, base-150, {size:38, weight:700, align:'center', alpha:A(t,5)});
+    txt('95 %', mu-1.5*sg, base-58, {size:26, weight:600, align:'center', alpha:A(t,10)}); txt('95 %', mu+1.5*sg, base-58, {size:26, weight:600, align:'center', alpha:A(t,10)});
+    txt('99.7 %', mu-2.75*sg, base-36, {size:19, align:'center', color:COL.mut, alpha:A(t,14)}); txt('99.7 %', mu+2.75*sg, base-36, {size:19, align:'center', color:COL.mut, alpha:A(t,14)});
+    const a=A(t,18,1); if(a>0){ line(mu+2*sg, base, mu+2*sg, base-190, COL.yel, a, 3); dot(mu+2*sg, base-190, 7, COL.yel, a); txt('z = (x − μ) / σ = 2', mu+2*sg+16, base-196, {size:22, mono:true, color:COL.yel, alpha:a}); txt('2.5 % beyond', mu+2*sg+16, base-166, {size:19, color:COL.mut, alpha:a}); }
+    txt('parameters: μ (centre), σ (width)', 70, 160, {size:21, color:COL.mut, alpha:A(t,1)});
+    txt('check: histogram · mean ≈ median · Q-Q plot', 70, 192, {size:21, color:COL.acc, alpha:A(t,29)});
+  }});
+
+S.push({ title:'Heavy tails — money is not normal', dur:24,
+  cap:[[0,'Transaction amounts. Most are small; a few are enormous.'],[5,'The mean is dragged up by the tail. The median is the typical customer.'],[11,'For money, quote the median and the percentiles — not the average.'],[15,'And take the logarithm. On a log scale, the same data becomes a bell.'],[20,'That is the log-normal: normal after the log. Do this before you model or test.']],
+  draw(t){
+    const m = A(t,15,2.5), hx=90, hy=540, hw=1100, hh=330, nb=70;
+    const toX = v => { const lin = clamp(v/420), lg = clamp((Math.log10(Math.max(v,1))-0)/3.6); return hx + lerp(lin,lg,m)*hw; };
+    const counts=Array(nb).fill(0); logn.forEach(v => { const b=Math.floor((toX(v)-hx)/hw*nb); if(b>=0&&b<nb) counts[b]++; });
+    const mx=Math.max(...counts); counts.forEach((cnt,b)=> rect(hx+b*hw/nb, hy-cnt/mx*hh, hw/nb-2, cnt/mx*hh, COL.acc, .8));
+    line(hx,hy,hx+hw,hy,COL.rule); txt(m<.5?'amount in € (linear scale) →':'amount in € (log scale) →', hx+hw, hy+30, {size:18, align:'right', color:COL.mut});
+    const a=A(t,5,1);
+    line(toX(lognMed),hy,toX(lognMed),hy-hh-10,COL.green,a,3); txt(`median €${lognMed.toFixed(0)}`, toX(lognMed)+8, hy-hh-14, {size:21, color:COL.green, weight:600, alpha:a});
+    line(toX(lognMean),hy,toX(lognMean),hy-hh+30,COL.red,a,3); txt(`mean €${lognMean.toFixed(0)}`, toX(lognMean)+8, hy-hh+28, {size:21, color:COL.red, weight:600, alpha:a});
+    txt('→ a few huge transactions', hx+hw-10, hy-60, {size:20, align:'right', color:COL.mut, alpha:A(t,2)*(1-m)});
+    txt('log(x) is normal', hx+hw-10, 170, {size:26, align:'right', color:COL.yel, weight:600, alpha:A(t,19)});
+  }});
+
+S.push({ title:'How they relate', dur:21,
+  cap:[[0,'One trial is Bernoulli. Add up n of them and you get the Binomial.'],[5,'Many trials with a tiny probability: Poisson. Many trials in general: Normal.'],[10,'And positive, multiplicative quantities become normal after a log.'],[14,'Two more worth one line each. The exponential is the waiting time between Poisson events. The uniform makes every value equally likely.']],
+  draw(t){
+    const box = (x,y,w,lab,sub,col,al) => { rect(x,y,w,84,COL.panel,al,10); strokeRect(x,y,w,84,col,al,2.5,10); txt(lab, x+w/2, y+38, {size:26, weight:700, align:'center', color:col, alpha:al}); txt(sub, x+w/2, y+66, {size:17, align:'center', color:COL.mut, alpha:al}); };
+    box(70,190,230,'Bernoulli','one yes / no',COL.acc,A(t,0));
+    arrow(304,232,416,232,COL.mut,A(t,2)); txt('sum of n', 360, 220, {size:16, align:'center', color:COL.mut, alpha:A(t,2)});
+    box(420,190,230,'Binomial','yeses in n trials',COL.acc,A(t,2.5));
+    arrow(654,216,826,160,COL.mut,A(t,5)); txt('n large, p tiny', 730, 168, {size:16, align:'center', color:COL.mut, alpha:A(t,5)});
+    box(830,110,260,'Poisson','rare events per window',COL.green,A(t,5.5));
+    arrow(654,250,826,318,COL.mut,A(t,7)); txt('n large', 724, 304, {size:16, align:'center', color:COL.mut, alpha:A(t,7)});
+    box(830,280,260,'Normal','sums and averages',COL.yel,A(t,7.5));
+    box(420,420,230,'Log-normal','money, sizes',COL.red,A(t,10));
+    arrow(654,452,930,372,COL.mut,A(t,11)); txt('take the log', 800, 440, {size:16, align:'center', color:COL.mut, alpha:A(t,11)});
+    txt('any variable — average many of them → Normal (central limit theorem, Module 2)', 640, 566, {size:19, align:'center', color:COL.mut, alpha:A(t,8.5)});
+    box(70,330,230,'Exponential','time between events',COL.green,A(t,14)); box(70,440,230,'Uniform','all values equally likely',COL.mut,A(t,16));
+  }});
+
+S.push({ title:'Six sentences to keep', dur:18,
+  cap:[[0,'Six sentences to keep.'],[2,'AND multiplies, OR adds, GIVEN shrinks the world.'],[6,'With rare events, the false-alarm rate drives precision — and Bayes shows why.'],[10,'Know each distribution by what it counts, and never trust an average of money.'],[14,'Now do the exercises.']],
+  draw(t){
+    const L = ['AND multiplies · OR adds (minus the overlap) · GIVEN shrinks the world','Bayes flips a conditional: prior × likelihood ÷ evidence','Rare event + imperfect detector = most alerts are false','Expectation sets the price; variance sets the risk','Bernoulli: one trial · Binomial: n trials · Poisson: rare events per window · Normal: averages','Money is heavy-tailed: median, percentiles, log'];
+    L.forEach((s,i)=>{ const a=A(t,1+i*1.9,.8); dot(96, 178+i*66, 7, COL.acc, a); wrap(s, 126, 187+i*66, 1060, 30, {size:26, alpha:a}); });
+  }});
+

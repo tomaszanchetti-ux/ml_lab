@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Module 2 — Statistics</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+</style>
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EDEF;
+    --ink: #131A1F;
+    --ink-muted: #55646D;
+    --ink-faint: #82949E;
+    --rule: #D5DFE3;
+    --rule-strong: #B3C2C9;
+    --accent: #2B3FA8;
+    --accent-soft: #E6E9F7;
+    --on-accent: #FFFFFF;
+    --good: #1F6B4E;
+    --good-soft: #E2F0E9;
+    --bad: #9E3628;
+    --bad-soft: #F7E7E4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1417;
+      --surface: #151D21;
+      --surface-2: #1B252A;
+      --ink: #E6EDF0;
+      --ink-muted: #9AA9B1;
+      --ink-faint: #74858D;
+      --rule: #232F35;
+      --rule-strong: #35454C;
+      --accent: #7DBDD6;
+      --accent-soft: #16282F;
+      --on-accent: #0E1417;
+      --good: #74C7A0;
+      --good-soft: #132521;
+      --bad: #E4907E;
+      --bad-soft: #2A1A17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1417;
+    --surface: #151D21;
+    --surface-2: #1B252A;
+    --ink: #E6EDF0;
+    --ink-muted: #9AA9B1;
+    --ink-faint: #74858D;
+    --rule: #232F35;
+    --rule-strong: #35454C;
+    --accent: #7DBDD6;
+    --accent-soft: #16282F;
+    --on-accent: #0E1417;
+    --good: #74C7A0;
+    --good-soft: #132521;
+    --bad: #E4907E;
+    --bad-soft: #2A1A17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 1.15rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  p { margin: 0 0 0.8em; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 3rem 0 1.5rem;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 5.5vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- objective banner ---------- */
+
+  .objective {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 1.35rem 1.4rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .objective .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .objective p { font-size: 1.05rem; line-height: 1.45; font-weight: 600; }
+  .objective .small { font-size: 0.88rem; font-weight: 400; opacity: 0.92; margin-top: 0.6rem; }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 2.75rem; }
+
+  h2 {
+    font-size: 1.18rem;
+    letter-spacing: -0.012em;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  h2 .n {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--ink-muted); font-size: 0.93rem; margin: 0.9rem 0 0; }
+
+  /* ---------- cards ---------- */
+
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .q .ask {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 0.55rem;
+    line-height: 1.35;
+  }
+
+  .q .real {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+    text-transform: none;
+  }
+  .q .real b {
+    display: block;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.28rem;
+    font-weight: 600;
+  }
+
+  .say {
+    background: var(--good-soft);
+    border-left: 2px solid var(--good);
+    padding: 0.85rem 1rem;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+  }
+  .say em { color: var(--ink-muted); font-style: italic; }
+
+  .trap {
+    font-size: 0.86rem;
+    color: var(--bad);
+    line-height: 1.5;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .trap b {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    flex: none;
+    padding-top: 0.24em;
+  }
+
+  ul.tight { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.35rem; font-size: 0.94rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  /* ---------- callout ---------- */
+
+  .call {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 1.1rem 1.25rem;
+    margin: 1.15rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+  .call .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .call b { color: var(--ink); }
+
+  /* ---------- never list ---------- */
+
+  .never {
+    background: var(--bad-soft);
+    border: 1px solid var(--bad);
+    padding: 1.15rem 1.3rem;
+    margin-top: 1rem;
+  }
+  .never ol { margin: 0; padding-left: 1.2rem; }
+  .never li {
+    margin-bottom: 0.55rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .never li:last-child { margin-bottom: 0; }
+  .never li b { color: var(--bad); }
+
+  /* ---------- pitch ---------- */
+
+  .pitch {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    padding: 1.3rem 1.4rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  .pitch .beat {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin: 1.1rem 0 0.35rem;
+    font-weight: 600;
+  }
+  .pitch .beat:first-child { margin-top: 0; }
+
+  /* ---------- checklist ---------- */
+
+  .checks { margin-top: 1rem; border-top: 1px solid var(--rule); }
+  .check {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .check .box {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--rule-strong);
+    margin-top: 0.24em;
+  }
+  .check .txt { font-size: 0.94rem; line-height: 1.5; color: var(--ink-muted); }
+  .check .txt b { color: var(--ink); }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--rule-strong);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+
+<style>
+  /* ---------- print ---------- */
+  @page { size: A4; margin: 13mm 13mm 15mm; }
+
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.4pt;
+      line-height: 1.45;
+    }
+    body { padding: 0; }
+    .wrap { max-width: none; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .masthead { padding: 0 0 0.7rem; }
+    h1 { font-size: 22pt; }
+    .sub { font-size: 9.5pt; }
+    .objective { margin-top: 0.9rem; padding: 0.85rem 1rem; }
+    .objective p { font-size: 11pt; }
+    .objective .small { font-size: 9pt; }
+
+    section { padding-top: 1.25rem; }
+    h2 { font-size: 12.5pt; break-after: avoid; page-break-after: avoid; }
+    .lede { font-size: 9.2pt; margin-top: 0.5rem; }
+
+    .q, .never, .call, .objective {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* prosa: puede partirse entre páginas sin romper la lectura */
+    .pitch, .checks { break-inside: auto; page-break-inside: auto; }
+    .pitch .beat { break-after: avoid; page-break-after: avoid; }
+    .check { break-inside: avoid; page-break-inside: avoid; }
+
+    .q { padding: 0.8rem 0.9rem 0.85rem; margin-top: 0.65rem; }
+    .q .ask { font-size: 10.6pt; }
+    .q .real { font-size: 7.6pt; }
+    .say { font-size: 9.4pt; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+    .trap { font-size: 8.6pt; }
+    .pitch { font-size: 10pt; padding: 0.9rem 1rem; }
+    ul.tight li, .never li, .check .txt { font-size: 9.4pt; }
+
+    .colophon { margin-top: 1.6rem; font-size: 8pt; }
+  }
+</style>
+</head>
+<style>
+  /* ---------- fit matrix (nuevo en esta hoja) ---------- */
+  .fit { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .fit th, .fit td { text-align: left; vertical-align: top; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .fit th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); }
+  .fit td.st { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; font-weight: 600; }
+  .ok { color: var(--good); } .mid { color: #9A6B12; } .no { color: var(--bad); }
+  .fit td.req { font-weight: 600; width: 27%; }
+  .fit td.ev { color: var(--ink-muted); }
+  .fit td.ev b { color: var(--ink); }
+  .en { font-style: normal; }
+  .say .es { display: block; margin-top: 0.55rem; font-size: 0.82rem; color: var(--ink-muted); font-style: italic; }
+  .facts { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .facts li { display: flex; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  .facts li b { flex: none; width: 9.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent); padding-top: 0.2em; }
+  .facts li span { color: var(--ink-muted); }
+  @media print {
+    .fit { font-size: 8.6pt; } .fit td.st { font-size: 7.4pt; }
+    .fit tr { break-inside: avoid; page-break-inside: avoid; }
+    .facts li { font-size: 9pt; break-inside: avoid; }
+    .say .es { font-size: 8.2pt; }
+  }
+</style>
+<style>
+  .f { font-family: var(--mono); font-size: 0.9em; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap; }
+  .fx { font-family: var(--mono); font-size: 0.88rem; background: var(--surface-2); padding: 0.7rem 0.9rem; margin: 0.6rem 0; line-height: 1.6; overflow-x: auto; }
+  .ex { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--good); padding: 0.9rem 1.1rem; margin: 0.8rem 0; font-size: 0.94rem; }
+  .ex .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--good); display: block; margin-bottom: 0.35rem; font-weight: 600; }
+  .drill { background: var(--accent-soft); border: 1px solid var(--rule-strong); padding: 0.9rem 1.1rem; margin: 1rem 0; font-size: 0.94rem; }
+  .drill .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.4rem; font-weight: 600; }
+  .drill ol { margin: 0; padding-left: 1.2rem; } .drill li { margin-bottom: 0.4rem; }
+  .ans { color: var(--ink-muted); font-size: 0.9rem; }
+  .ans li { margin-bottom: 0.45rem; }
+  table.t { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+  table.t th, table.t td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h3 { font-size: 1.02rem; margin: 1.6rem 0 0.4rem; }
+  h4 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; color: var(--ink); }
+  .say30 { border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.6rem 0; font-size: 0.92rem; background: var(--surface); }
+  .say30 b { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .part { margin-top: 3rem; padding: 1rem 1.2rem; background: var(--accent); color: var(--on-accent); }
+  .part .k { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; display: block; }
+  .part h2 { border: 0; margin: 0.2rem 0 0; padding: 0; color: var(--on-accent); font-size: 1.4rem; }
+  .part p { margin: 0.4rem 0 0; font-size: 0.92rem; opacity: 0.95; }
+  @media print { .fx { font-size: 8.4pt; } .ex, .drill, .say30 { break-inside: avoid; } h3, h4 { break-after: avoid; } .part { break-before: page; } }
+</style>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Revolut · Machine Learning 1 (Basics) · 8 October 2026 · Module 2 of 4</p>
+    <h1>Module 2 — Statistics</h1>
+    <p class="sub">Revolut's topic 3, verbatim: <b>"Bias in statistics, statistical significance, A/B testing."</b> Probability (Module 1) went from a known world to data: <em>given p, what will I see?</em> Statistics goes the other way: <em>given what I saw, what can I say about the world — and how sure am I?</em> Same format: idea, formula, Revolut case, 30-second answer, exercises. Answers at the back.</p>
+  </header>
+
+  <div class="objective">
+    <span class="lab">The one idea of this module</span>
+    <p>You never see the whole population — you see a sample. Every number you compute from a sample is an estimate with an error. Statistics is the discipline of saying how big that error is, and of not fooling yourself.</p>
+    <p class="small">Two kinds of error, and they never go away: <b>noise</b> (random — shrinks with more data) and <b>bias</b> (systematic — more data does not help). Confidence intervals, p-values and sample sizes deal with noise. Good experiment design deals with bias. An interviewer wants to hear that you know which is which.</p>
+  </div>
+
+  <!-- B1 -->
+  <section>
+    <h2><span class="n">B1</span>Population, sample, estimator</h2>
+    <table class="t">
+      <thead><tr><th>Word</th><th>Meaning</th><th>Revolut example</th></tr></thead>
+      <tbody>
+        <tr><td><b>Population</b></td><td>everything you care about</td><td>all Revolut customers; all future transactions</td></tr>
+        <tr><td><b>Parameter</b></td><td>a true, fixed, unknown number about the population (μ, σ, p)</td><td>the true fraud rate; the true conversion rate of a new screen</td></tr>
+        <tr><td><b>Sample</b></td><td>the part you actually observed</td><td>the 20,000 users in the experiment; last month's transactions</td></tr>
+        <tr><td><b>Statistic / estimate</b></td><td>a number computed from the sample (x̄, s, p̂)</td><td>the fraud rate you measured last month</td></tr>
+        <tr><td><b>Estimator</b></td><td>the recipe that turns a sample into an estimate</td><td>"count frauds, divide by transactions"</td></tr>
+      </tbody>
+    </table>
+    <p>Notation: Greek or plain letters for the truth (μ, p), hats and bars for estimates (<span class="f">x̄</span>, <span class="f">p̂</span>). The sample mean <span class="f">x̄ = (1/n) Σ xᵢ</span> estimates μ; the sample proportion <span class="f">p̂ = k/n</span> estimates p; the sample standard deviation <span class="f">s</span> estimates σ (it divides by n − 1 instead of n — a small correction that removes a bias; one line is all you need to say).</p>
+    <p><b>Law of large numbers:</b> as n grows, the sample mean converges to the true mean. That's the coin from Module 1 settling on 0.5. It tells you estimates <em>get</em> good; the next sections tell you <em>how</em> good at a given n.</p>
+    <p><b>Maximum likelihood (one paragraph, in case it's asked):</b> the standard recipe for building an estimator — choose the parameter value under which the data you observed would have been most likely. For a coin with 7 heads in 10, the MLE of p is 0.7; for a normal, the MLE of μ is the sample mean. Training a logistic regression is maximum likelihood: find the weights that make the observed outcomes most probable.</p>
+    <div class="say30"><b>30 seconds — "population vs. sample, parameter vs. statistic"</b>"The population is everything I care about — all customers, all future transactions — and a parameter is a true number about it, like the real fraud rate, which I never see. A sample is what I observed, and a statistic is what I compute from it, like last month's measured fraud rate. The statistic is an estimate of the parameter and it comes with an error; the job of statistics is to quantify that error and to make sure the sample isn't systematically different from the population."</div>
+    <div class="drill"><span class="lab">Exercises B1</span><ol>
+      <li>For each, say parameter or statistic: (a) the conversion rate in last week's experiment; (b) the probability that a Revolut customer defaults; (c) the median balance of the 5,000 customers you pulled.</li>
+      <li>You measure a 1.8 % chargeback rate on 500 transactions and your colleague measures 2.3 % on another 500. Who is right?</li>
+      <li>Of 40 flagged transactions reviewed, 6 were fraud. What is the maximum-likelihood estimate of the precision? What would make you distrust it?</li>
+    </ol></div>
+  </section>
+
+  <!-- B2 -->
+  <section>
+    <h2><span class="n">B2</span>Bias — the error that more data doesn't fix</h2>
+    <p class="lede">"Bias in statistics" is the first item on their list. The word has two related meanings; know both.</p>
+
+    <h3>Meaning 1 — bias of an estimator</h3>
+    <div class="fx">bias = E[estimate] − truth        variance = how much the estimate jumps around from sample to sample</div>
+    <p>Imagine repeating the study many times and plotting every estimate as a dart. <b>Bias</b> is how far the centre of the darts is from the bullseye; <b>variance</b> is how scattered they are. An estimator is <b>unbiased</b> if on average it hits the truth.</p>
+    <table class="t">
+      <thead><tr><th></th><th>Low variance</th><th>High variance</th></tr></thead>
+      <tbody>
+        <tr><td><b>Low bias</b></td><td>tight, on target — the goal</td><td>centred on target, but scattered → get more data</td></tr>
+        <tr><td><b>High bias</b></td><td>tight, in the wrong place — <em>the dangerous one: looks precise</em></td><td>scattered and off</td></tr>
+      </tbody>
+    </table>
+    <p>Total error: <span class="f">mean squared error = bias² + variance</span>. More data shrinks variance. <em>Nothing</em> about sample size shrinks bias. Sometimes a slightly biased estimator with much lower variance is the better choice — that trade is the heart of Module 3 (regularisation is exactly this).</p>
+
+    <h3>Meaning 2 — biased data: the sample doesn't represent the population</h3>
+    <table class="t">
+      <thead><tr><th>Bias</th><th>What happens</th><th>Revolut example</th></tr></thead>
+      <tbody>
+        <tr><td><b>Selection bias</b></td><td>who gets into the sample depends on the thing you're measuring</td><td>Surveying satisfaction only among users who opened the app this week. Testing a feature only on users who opted in.</td></tr>
+        <tr><td><b>Survivorship bias</b></td><td>you only see the ones that made it through a filter</td><td>A credit model trained only on <em>approved</em> loans never learns what the rejected applicants would have done. Analysing "customers with 3+ years" to understand churn.</td></tr>
+        <tr><td><b>Label / observation bias</b></td><td>the outcome is only recorded for some cases</td><td>Fraud is confirmed only for transactions someone investigated — the model learns the investigators' habits.</td></tr>
+        <tr><td><b>Non-response bias</b></td><td>those who answer differ from those who don't</td><td>NPS surveys: angry and delighted customers reply; the middle doesn't.</td></tr>
+        <tr><td><b>Measurement bias</b></td><td>the instrument is systematically off</td><td>An event that isn't logged on old Android versions.</td></tr>
+        <tr><td><b>Look-ahead bias / leakage</b></td><td>using information that wasn't available at decision time</td><td>A default model that uses "days past due" recorded after the default.</td></tr>
+        <tr><td><b>Confirmation bias</b></td><td>you look until you find what you expected, then stop</td><td>Slicing an A/B test by 30 segments and reporting the one that "worked".</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Two classic traps that look like bias</h3>
+    <div class="ex"><span class="lab">Simpson's paradox — the mix changes the answer</span>
+      A new dispute flow resolves more cases than the old one in <em>every</em> segment, yet less overall:
+      <table class="t"><thead><tr><th></th><th>Small disputes</th><th>Large disputes</th><th>Overall</th></tr></thead><tbody>
+      <tr><td>Old flow</td><td>800 / 1,000 = 80 %</td><td>100 / 500 = 20 %</td><td>900 / 1,500 = <b>60 %</b></td></tr>
+      <tr><td>New flow</td><td>170 / 200 = <b>85 %</b></td><td>325 / 1,300 = <b>25 %</b></td><td>495 / 1,500 = 33 %</td></tr></tbody></table>
+      The new flow was given mostly the hard cases. The overall rate compares different mixes, not different flows. Fix: compare within segments, or — better — randomise who gets which flow. This is the strongest single argument for A/B testing.</div>
+    <div class="ex"><span class="lab">Regression to the mean — extremes drift back on their own</span>
+      Pick the 50 merchants with the most disputes last month and send them a warning. Next month their disputes fall. Did the warning work? Not necessarily: an extreme month is partly bad luck, and luck doesn't repeat. The same merchants would have improved with no email. Same reason a very tall father tends to have a son who is tall, but less so. Fix: a control group selected the same way.</div>
+
+    <div class="say30"><b>30 seconds — "what is bias in statistics?"</b>"Two things. For an estimator, bias is systematic error: if I repeated the study many times, the average of my estimates would still miss the truth — as opposed to variance, which is random scatter that more data reduces. And for data, bias means my sample isn't representative: selection bias, survivorship bias — like training a credit model only on approved loans, so it never sees how rejected applicants behave. The key point is that more data fixes variance but never bias; bias is fixed by design — randomisation, control groups, careful definition of who's in the sample."</div>
+
+    <div class="drill"><span class="lab">Exercises B2</span><ol>
+      <li>Name the bias: (a) "Customers who use the savings vault have 40 % higher balances, so vaults increase balances." (b) "Our fraud model has 99 % precision on the cases the fraud team reviewed." (c) "Users who completed the new onboarding convert more than users who dropped out of it."</li>
+      <li>Two measurement methods for average transaction value. Method A: unbiased, standard error €10. Method B: always about €2 too high, standard error €1. Which gives the smaller typical error? What does that teach you?</li>
+      <li>A credit model is trained on 2 million approved loans. Your colleague says "with that much data it can't be biased." Answer in two sentences.</li>
+      <li>The 20 support agents with the worst satisfaction scores in March get coaching; in April their scores improve by 8 points. What two explanations are there, and how would you tell them apart?</li>
+      <li>In the Simpson table, why would randomising customers between the two flows make the overall comparison fair?</li>
+    </ol></div>
+  </section>
+
+  <!-- B3 -->
+  <section>
+    <h2><span class="n">B3</span>How wrong is my estimate? Standard error and the Central Limit Theorem</h2>
+    <p>Take a sample of n, compute the mean. Take another sample: a slightly different mean. The spread of those possible means is the <b>standard error</b>:</p>
+    <div class="fx">SE of a mean = σ / √n            SE of a proportion = √( p(1 − p) / n )</div>
+    <ul class="tight">
+      <li><b>Standard deviation</b> (σ) describes how spread out <em>individuals</em> are. <b>Standard error</b> describes how uncertain your <em>estimate</em> is. People mix them up constantly; don't.</li>
+      <li><b>The √n rule:</b> to halve the error you need <b>four times</b> the data. Going from 1,000 to 4,000 users buys as much as 10,000 to 40,000. Precision gets expensive.</li>
+    </ul>
+    <h3>The Central Limit Theorem</h3>
+    <p>Whatever the shape of the raw data — skewed, heavy-tailed, yes/no — the <em>mean of a large enough sample</em> is approximately normal, centred on the true mean, with standard deviation σ/√n. That is why the normal distribution is everywhere in statistics, and why confidence intervals and tests work on data that isn't remotely bell-shaped.</p>
+    <ul class="tight">
+      <li>"Large enough": ~30 for mild shapes; hundreds or thousands for heavy tails like revenue — a few whales can dominate the mean of even a big sample.</li>
+      <li>It's about <b>means and sums</b>, not about the raw data. The data doesn't become normal; the average does.</li>
+    </ul>
+    <div class="ex"><span class="lab">Revolut</span>Transaction amounts: σ ≈ €600 (heavy tail). Average of 100 transactions: SE = 600/√100 = €60. Average of 10,000: SE = €6. Average of 1,000,000: SE = €0.60. A daily "average transaction value" on a small market can move by tens of euros with nothing having happened.</div>
+    <div class="say30"><b>30 seconds — "what is the Central Limit Theorem and why does it matter?"</b>"If I take a large sample and compute its mean, that mean is approximately normally distributed around the true mean, with spread sigma over root n — whatever the shape of the underlying data. It matters because it lets me put error bars on an average and run tests even when the data is skewed, like transaction amounts. Two caveats: it's about the mean, not the data, and with very heavy tails 'large enough' can mean thousands, not thirty."</div>
+    <div class="drill"><span class="lab">Exercises B3</span><ol>
+      <li>σ = €200. Standard error of the mean with n = 100? With n = 400? With n = 10,000?</li>
+      <li>You measured a 4 % default rate on 2,500 loans. Standard error of that 4 %?</li>
+      <li>A dashboard shows "average order value" per country per day. Luxembourg swings ±€40 day to day; Spain barely moves. Why, and what would you change on the dashboard?</li>
+      <li>True or false: "By the CLT, with enough customers our balances become normally distributed."</li>
+    </ol></div>
+  </section>
+
+  <!-- B4 -->
+  <section>
+    <h2><span class="n">B4</span>Confidence intervals — the estimate with its error bars</h2>
+    <div class="fx">95 % CI = estimate ± 1.96 × SE          (90 %: ± 1.645 × SE     99 %: ± 2.58 × SE)</div>
+    <p>1.96 comes from the normal curve: 95 % of the area lies within ±1.96 standard deviations (the "±2σ" of Module 1).</p>
+    <div class="ex"><span class="lab">Worked</span>Auto-resolution rate measured at 30 % on 400 disputes. SE = √(0.3 × 0.7 / 400) = 0.0229. CI = 30 % ± 1.96 × 2.29 = <b>30 % ± 4.5 pp → [25.5 %, 34.5 %]</b>. On 4,000 disputes: ± 1.4 pp. On 40,000: ± 0.45 pp.</div>
+    <h3>What it means — and what it doesn't</h3>
+    <ul class="tight">
+      <li><b>Correct:</b> "If we repeated this study many times, 95 % of the intervals built this way would contain the true value." The 95 % describes the <em>procedure</em>.</li>
+      <li><b>Loose but acceptable in business:</b> "we're fairly confident the true rate is between 25.5 % and 34.5 %."</li>
+      <li><b>Wrong:</b> "95 % of customers fall in this range" (that's about individuals, not the mean). Also wrong: thinking it covers bias — a CI only measures noise. A biased sample gives a tight interval around the wrong number.</li>
+    </ul>
+    <p><b>Three things make it narrower:</b> more data (√n), less variable data (smaller σ), or accepting less confidence (90 % instead of 95 %).</p>
+    <p><b>The link to testing:</b> if the 95 % CI for a difference between A and B does not include zero, the difference is statistically significant at the 5 % level. Same maths, and the CI tells you more — it shows the size.</p>
+    <div class="say30"><b>30 seconds — "what is a confidence interval?"</b>"It's a range around an estimate that reflects sampling noise: the estimate plus or minus about two standard errors for 95 %. Strictly, if I repeated the experiment many times, 95 % of such intervals would contain the true value. Practically: we measured 30 % on 400 cases, so the truth is plausibly between 25 and 35, and if someone asks whether it's 30 or 32, the honest answer is we can't tell yet. It only covers random error — if the sample is biased, the interval is confidently wrong."</div>
+    <div class="drill"><span class="lab">Exercises B4</span><ol>
+      <li>Fraud-model precision measured at 60 % on 150 reviewed alerts. 95 % CI?</li>
+      <li>How many reviewed alerts would you need for a margin of ± 2 pp at the same precision?</li>
+      <li>Team A reports "conversion 12.0 % (95 % CI 11.8–12.2)". Team B reports "12.0 % (95 % CI 9–15)". What's different about their data?</li>
+      <li>The CI for the difference B − A in an experiment is [−0.3 pp, +1.9 pp]. Significant at 5 %? What would you tell the product manager?</li>
+    </ol></div>
+  </section>
+
+  <!-- B5 -->
+  <section>
+    <h2><span class="n">B5</span>Hypothesis tests and statistical significance</h2>
+    <h3>The logic, in four steps</h3>
+    <ol class="tight" style="padding-left:1.2rem">
+      <li><b>Null hypothesis H₀:</b> "nothing is going on" — no difference between A and B. <b>Alternative H₁:</b> there is a difference.</li>
+      <li>Compute a <b>test statistic</b>: how many standard errors the observed difference is from zero. <span class="f">z = difference / SE</span>.</li>
+      <li><b>p-value:</b> if H₀ were true, how often would chance alone give a result at least this extreme?</li>
+      <li>If p is below a threshold chosen in advance (<b>α</b>, usually 0.05), reject H₀ and call the result <b>statistically significant</b>.</li>
+    </ol>
+    <p>It's proof by contradiction with probabilities: assume no effect; if the data would be very surprising under that assumption, abandon the assumption.</p>
+
+    <h3>What a p-value is and isn't</h3>
+    <ul class="tight">
+      <li><b>Is:</b> P(data this extreme | no real effect).</li>
+      <li><b>Is not:</b> the probability that H₀ is true. Not the probability the result is a fluke. (That's P(no effect | data) — the flipped conditional. Module 1: you'd need a prior.)</li>
+      <li><b>Is not:</b> the size or importance of the effect. With a million users, a 0.05 pp lift is "significant" and irrelevant. With 200 users, a 5 pp lift may be "not significant" and real. <b>Statistical significance ≠ practical significance.</b> Always report the effect size and its confidence interval.</li>
+    </ul>
+
+    <h3>The two errors</h3>
+    <table class="t">
+      <thead><tr><th></th><th>Truth: no effect</th><th>Truth: real effect</th></tr></thead>
+      <tbody>
+        <tr><td><b>You conclude "effect"</b></td><td><b>Type I error</b> — false positive. Probability = α (5 %).</td><td>Correct. Probability = <b>power</b> = 1 − β (aim for 80 %).</td></tr>
+        <tr><td><b>You conclude "no effect"</b></td><td>Correct.</td><td><b>Type II error</b> — false negative. Probability = β.</td></tr>
+      </tbody>
+    </table>
+    <p>It is the confusion matrix of Module 1: a test is a detector, α is its false-alarm rate, power is its recall. <b>Power</b> rises with a bigger true effect, a bigger sample, less noisy data, or a looser α. An under-powered test that finds "no significant difference" has shown nothing — absence of evidence is not evidence of absence.</p>
+
+    <h3>A test by hand: two proportions</h3>
+    <div class="ex"><span class="lab">Worked — the one to be able to do on a whiteboard</span>
+      A: 1,000 conversions out of 10,000 (10.0 %). B: 1,100 out of 10,000 (11.0 %). Difference = 1.0 pp.<br>
+      Pooled rate p = 2,100 / 20,000 = 0.105.<br>
+      <span class="f">SE = √( p(1 − p) × (1/n_A + 1/n_B) ) = √(0.105 × 0.895 × 0.0002) = 0.00434</span><br>
+      <span class="f">z = 0.010 / 0.00434 = 2.31</span> → beyond 1.96 → <b>p ≈ 0.021</b>, significant at 5 %.<br>
+      95 % CI for the lift: 1.0 pp ± 1.96 × 0.434 pp = <b>[0.15 pp, 1.85 pp]</b>. Say that: "B is better by somewhere between 0.15 and 1.85 points."</div>
+
+    <h3>Which test — one line each</h3>
+    <ul class="tight">
+      <li><b>z-test for proportions:</b> comparing two rates (conversion, default, resolution). Most A/B tests.</li>
+      <li><b>t-test:</b> comparing two means (average spend) when σ is estimated from the data. For large n it is the z-test.</li>
+      <li><b>Chi-square test:</b> counts in categories — more than two variants, or "is the split across categories what we expected?" Also used to check the 50/50 assignment.</li>
+      <li><b>Mann–Whitney / bootstrap:</b> when the metric is heavily skewed (revenue) and means are unreliable.</li>
+      <li><b>One-sided vs. two-sided:</b> two-sided asks "different?", one-sided asks "better?". Default to two-sided; choosing one-sided after seeing the data is cheating.</li>
+    </ul>
+
+    <h3>Multiple comparisons</h3>
+    <p>Test 20 metrics at α = 5 % with no real effect anywhere, and you expect one "significant" result by luck: P(at least one false positive) = 1 − 0.95²⁰ = 64 %. Remedies: one <b>primary metric</b> decided beforehand; for many tests, a stricter threshold (<b>Bonferroni</b>: α divided by the number of tests).</p>
+
+    <div class="say30"><b>30 seconds — "what is a p-value? what is statistical significance?"</b>"The p-value is the probability of seeing a result at least as extreme as mine if there were truly no effect. If it's below a threshold I fixed in advance, usually 5 %, I call the result statistically significant: chance alone is an unlikely explanation. It is not the probability that the null is true, and it says nothing about the size of the effect — a tiny lift on a huge sample is significant and useless — so I always report the effect size with its confidence interval. And 5 % means that one in twenty tests of a null effect comes out 'significant' anyway, which is why I pre-register a primary metric."</div>
+
+    <div class="drill"><span class="lab">Exercises B5</span><ol>
+      <li>A: 400 of 5,000 convert. B: 460 of 5,000. Compute the difference, the SE, z, and say whether it's significant at 5 %. Then give the 95 % CI of the lift.</li>
+      <li>An experiment on 3 million users reports a lift of 0.04 pp with p = 0.001. Ship it?</li>
+      <li>An experiment on 300 users reports a lift of 6 pp with p = 0.18. "So the feature doesn't work." Correct?</li>
+      <li>In fraud terms: for a test with α = 5 % and power 80 %, what are the "false-alarm rate" and the "recall"?</li>
+      <li>You look at 12 guardrail metrics; one is significantly worse at p = 0.04. How worried should you be?</li>
+      <li>Explain why "p = 0.03 means there's a 97 % chance the feature works" is wrong, using Module 1 vocabulary.</li>
+    </ol></div>
+  </section>
+
+  <!-- B6 -->
+  <section>
+    <h2><span class="n">B6</span>A/B testing, end to end</h2>
+    <p class="lede">An A/B test is a randomised controlled experiment: split users at random, change one thing for one group, compare. Randomisation is the point — it makes the two groups identical on average in <em>everything</em>, known and unknown, so any difference is caused by the change. It is the cure for every bias in B2.</p>
+
+    <h3>The seven steps</h3>
+    <table class="t">
+      <thead><tr><th>#</th><th>Step</th><th>What you decide</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>Hypothesis</b></td><td>"Showing the fee before confirmation will raise completed transfers." One change, one expected direction.</td></tr>
+        <tr><td>2</td><td><b>Metrics</b></td><td>One <b>primary</b> metric (the decision metric) + a few <b>guardrails</b> (things that must not get worse: complaints, fraud, latency, revenue).</td></tr>
+        <tr><td>3</td><td><b>Unit of randomisation</b></td><td>Usually the <b>customer</b>, not the session or the transaction — otherwise the same person sees both versions and observations aren't independent.</td></tr>
+        <tr><td>4</td><td><b>Sample size</b></td><td>From the baseline rate, the <b>minimum detectable effect</b> (MDE: the smallest lift worth having), α = 5 % and power = 80 %.</td></tr>
+        <tr><td>5</td><td><b>Duration</b></td><td>Enough days to reach the sample size, in <b>whole weeks</b> (weekday/weekend, payday effects). Fixed in advance.</td></tr>
+        <tr><td>6</td><td><b>Run — and don't peek</b></td><td>Check health (crashes, sample ratio), not significance.</td></tr>
+        <tr><td>7</td><td><b>Analyse and decide</b></td><td>Effect size, CI, p-value on the primary metric; guardrails; then ship / iterate / kill.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Sample size — the formula worth memorising</h3>
+    <div class="fx">n per group ≈ 16 × σ² / δ²            for a rate: σ² = p(1 − p),  δ = the lift you want to detect</div>
+    <div class="ex"><span class="lab">Worked</span>Baseline conversion 10 %, you care about +1 pp. σ² = 0.1 × 0.9 = 0.09; δ = 0.01. n ≈ 16 × 0.09 / 0.0001 = <b>14,400 per group</b>. Want to detect +0.5 pp instead? δ halves → n × 4 = <b>57,600 per group</b>. Halving the effect you want to see quadruples the cost. That's the √n rule again, and it's why "let's test it on 300 users" can't work for small effects.</div>
+
+    <h3>The pitfalls — each is a likely interview question</h3>
+    <table class="t">
+      <thead><tr><th>Pitfall</th><th>What goes wrong</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td><b>Peeking</b></td><td>Checking daily and stopping the first time p &lt; 0.05. With enough looks, even an A/A test crosses the line: false-positive rate climbs from 5 % to 20–30 %.</td><td>Fix n in advance; or use sequential-testing methods built for peeking.</td></tr>
+        <tr><td><b>Under-powered test</b></td><td>Too few users; "no significant difference" means nothing.</td><td>Compute sample size first. Report the CI: a wide one says "we don't know".</td></tr>
+        <tr><td><b>Multiple metrics / segments</b></td><td>Slice until something is significant.</td><td>One primary metric; correct for multiple tests; treat segment findings as hypotheses for the next test.</td></tr>
+        <tr><td><b>Novelty and primacy effects</b></td><td>Users click new things because they're new (or resist them at first). The early effect isn't the long-run effect.</td><td>Run longer; look at the trend by day; compare new vs. existing users.</td></tr>
+        <tr><td><b>Sample ratio mismatch (SRM)</b></td><td>You asked for 50/50 and got 50.9/49.1 on a million users. Something in assignment or logging is broken, and the result is not trustworthy.</td><td>Chi-square test on the split before reading any result.</td></tr>
+        <tr><td><b>Interference</b></td><td>One user's treatment affects another's outcome (referrals, P2P payments, marketplaces, shared merchants).</td><td>Randomise by cluster (group, region, time slot).</td></tr>
+        <tr><td><b>Skewed metrics</b></td><td>Revenue per user: one whale lands in B and "B wins".</td><td>Cap/winsorise outliers, log-transform, use a rank test or bootstrap; more users.</td></tr>
+        <tr><td><b>Opt-in features</b></td><td>Comparing users who chose the feature with those who didn't is selection bias.</td><td>Randomise who is <em>offered</em> it and compare the offered group with the control (intent-to-treat).</td></tr>
+        <tr><td><b>Overlapping experiments</b></td><td>Two tests on the same screen interact.</td><td>Mutually exclusive groups, or a full factorial design.</td></tr>
+      </tbody>
+    </table>
+    <ul class="tight">
+      <li><b>A/A test:</b> both groups get the same thing. It should show no difference — if it does, your randomisation or logging is broken. It also shows the natural noise of the metric.</li>
+      <li><b>How to check randomisation worked:</b> compare the groups on things measured <em>before</em> the test (country mix, tenure, past activity) and check the sample ratio.</li>
+      <li><b>When you can't A/B test</b> (legal, a pricing change for everyone, tiny populations): a holdout region, a before/after with a comparison group (difference-in-differences), or — for automations — <b>shadow mode</b>: the system decides, humans still act, you compare.</li>
+    </ul>
+
+    <div class="say30"><b>30 seconds — "how would you run an A/B test?"</b>"I start from one hypothesis and one primary metric, plus guardrails that mustn't get worse. I randomise by customer so the groups are comparable on everything. Before launching I compute the sample size from the baseline, the smallest lift worth detecting, 5 % significance and 80 % power — roughly sixteen times the variance over the effect squared per group — and fix the duration in whole weeks. While it runs I check health and the sample ratio but I don't peek at significance. At the end I report the effect size with its confidence interval, check the guardrails, and decide. The usual ways to get it wrong are stopping early, slicing by many segments, and novelty effects."</div>
+
+    <div class="drill"><span class="lab">Exercises B6</span><ol>
+      <li>Baseline 4 % of users activate a card feature; you want to detect a lift to 4.4 %. Sample size per group? If 20,000 eligible users arrive per day in total, how long do you run?</li>
+      <li>Day 3 of a planned 14-day test: p = 0.03, B is ahead. The PM wants to ship. What do you say?</li>
+      <li>Final split: 501,912 users in A, 498,088 in B. Anything wrong?</li>
+      <li>You test a new "split the bill" flow. Why might randomising by user give a biased answer, and what would you randomise instead?</li>
+      <li>Revenue per user is the metric; three accounts in B each moved more than €1 million. What do you do?</li>
+      <li>A feature is opt-in; users who enabled it have 25 % higher retention. Design the test that would tell you whether the feature causes that.</li>
+      <li>Why run an A/A test before a big experiment programme?</li>
+    </ol></div>
+  </section>
+
+  <!-- cheat -->
+  <section>
+    <h2><span class="n">B7</span>One-page cheat sheet</h2>
+    <ul class="facts">
+      <li><b>Parameter / statistic</b><span>The truth about the population (never seen) / the number from your sample (an estimate with error).</span></li>
+      <li><b>Bias vs. variance</b><span>Systematic miss vs. random scatter. MSE = bias² + variance. More data fixes variance, never bias.</span></li>
+      <li><b>Biased data</b><span>Selection · survivorship (approved loans only) · label bias · non-response · leakage · confirmation. Cure: randomise, control group.</span></li>
+      <li><b>Simpson / regression to the mean</b><span>The mix can reverse a comparison; extremes drift back on their own. Cure for both: a randomised control.</span></li>
+      <li><b>Standard error</b><span>σ/√n for a mean; √(p(1−p)/n) for a rate. 4× the data → half the error.</span></li>
+      <li><b>CLT</b><span>Means of large samples are normal, whatever the data. Heavy tails need much larger n.</span></li>
+      <li><b>95 % CI</b><span>estimate ± 1.96 SE. Covers noise only, not bias. CI of a difference excluding 0 = significant.</span></li>
+      <li><b>p-value</b><span>P(data this extreme | no effect). Not P(no effect). Not effect size.</span></li>
+      <li><b>Type I / II</b><span>False positive (α = 5 %) / false negative (β). Power = 1 − β = 80 % target.</span></li>
+      <li><b>z-test, two rates</b><span>z = (p̂_B − p̂_A) / √(p(1−p)(1/n_A + 1/n_B)); |z| &gt; 1.96 → significant.</span></li>
+      <li><b>Sample size</b><span>n per group ≈ 16 σ²/δ². Half the effect → four times the users.</span></li>
+      <li><b>A/B hygiene</b><span>One primary metric · randomise by customer · fixed n and whole weeks · no peeking · check SRM · guardrails · effect size with CI.</span></li>
+    </ul>
+  </section>
+
+  <!-- answers -->
+  <section>
+    <h2><span class="n">A</span>Answers — check only after you've written yours</h2>
+    <h3>B1</h3>
+    <ol class="ans">
+      <li>(a) statistic; (b) parameter; (c) statistic.</li>
+      <li>Probably both, within noise. SE of a ~2 % rate on 500 is √(0.02 × 0.98 / 500) ≈ 0.63 pp, so each estimate is ± 1.2 pp; 1.8 % and 2.3 % are fully compatible. Pool them: ~2.05 % on 1,000.</li>
+      <li>6/40 = 15 %. Distrust: tiny n (CI roughly 15 % ± 11 pp), and <em>which</em> 40 were reviewed — if reviewers picked the suspicious-looking ones, it's selection bias.</li>
+    </ol>
+    <h3>B2</h3>
+    <ol class="ans">
+      <li>(a) Selection bias / reverse causation — people with more money choose vaults. (b) Label bias — precision is only known where someone looked; unreviewed alerts are unknown. (c) Survivorship — completers were more motivated to begin with.</li>
+      <li>A: typical error ≈ €10 (all variance). B: √(2² + 1²) ≈ €2.2. B is better despite being biased: MSE = bias² + variance. A small known bias can be worth a large drop in variance — and a known bias can be subtracted.</li>
+      <li>Size shrinks variance, not bias. The model only saw applicants someone chose to approve, so it knows nothing about the rejected population, however many approved loans there are (survivorship bias; the remedy is reject inference or a small random-approval sample).</li>
+      <li>Coaching worked, or regression to the mean (their March was partly bad luck). Tell them apart with a control: coach a random half of the bottom 20 and compare with the other half.</li>
+      <li>Randomisation gives both flows the same mix of small and large disputes on average, so the overall rates compare flows rather than mixes.</li>
+    </ol>
+    <h3>B3</h3>
+    <ol class="ans">
+      <li>€20; €10; €2.</li>
+      <li>√(0.04 × 0.96 / 2,500) = √(0.00001536) ≈ 0.39 pp. So 4 % ± 0.8 pp.</li>
+      <li>Luxembourg has few orders per day → large standard error (σ/√n with small n); Spain has many. Show a confidence band, or aggregate small markets weekly, or show the median.</li>
+      <li>False. The CLT is about the mean of a sample, not the raw data. Balances stay heavy-tailed however many customers you have.</li>
+    </ol>
+    <h3>B4</h3>
+    <ol class="ans">
+      <li>SE = √(0.6 × 0.4 / 150) = 0.04. CI = 60 % ± 7.8 pp → [52 %, 68 %].</li>
+      <li>Need 1.96 × SE = 0.02 → SE = 0.0102 → n = 0.24 / 0.0102² ≈ 2,300 alerts. (From ± 8 to ± 2 is 4× tighter → 16× the data: 150 × 16 = 2,400. Same answer by the √n rule.)</li>
+      <li>Sample size. A has a very large sample (~100,000); B a small one (~450). Same point estimate, very different knowledge.</li>
+      <li>Not significant — the interval includes zero. "The effect is somewhere between slightly negative and +1.9 pp; most likely positive, but we can't rule out no effect. If +1 pp matters to us, we need a larger test."</li>
+    </ol>
+    <h3>B5</h3>
+    <ol class="ans">
+      <li>8.0 % vs 9.2 %: difference 1.2 pp. Pooled p = 860/10,000 = 0.086. SE = √(0.086 × 0.914 × 0.0004) = √(0.00003144) = 0.00561. z = 0.012 / 0.00561 = 2.14 → p ≈ 0.03, significant. CI: 1.2 pp ± 1.1 pp → [0.1 pp, 2.3 pp].</li>
+      <li>Statistically significant, practically negligible. Ship only if it's free to ship and maintain and no guardrail moved; the lift itself is not a reason.</li>
+      <li>No. The test was under-powered: with 300 users the CI on a 6 pp lift is very wide and includes both zero and large effects. "Not significant" ≠ "no effect". Run a properly sized test.</li>
+      <li>False-alarm rate = α = 5 % (P(detect | no effect)). Recall = power = 80 % (P(detect | real effect)).</li>
+      <li>Not very, on its own: with 12 metrics, the chance of at least one p &lt; 0.05 by luck is 1 − 0.95¹² ≈ 46 %. Look at the size and plausibility; Bonferroni threshold would be 0.05/12 ≈ 0.004. If it's a critical guardrail (fraud, complaints), re-test it specifically.</li>
+      <li>p = P(data | no effect). The claim is about P(effect | data) — the flipped conditional. To flip it you need Bayes and a prior: if only 10 % of ideas truly work, a "significant" result is real far less than 97 % of the time. Same mistake as confusing recall with precision.</li>
+    </ol>
+    <h3>B6</h3>
+    <ol class="ans">
+      <li>σ² = 0.04 × 0.96 = 0.0384; δ = 0.004. n ≈ 16 × 0.0384 / 0.000016 = 38,400 per group, 76,800 total → 3.84 days of traffic → run <b>7 days</b> (a whole week), better 14.</li>
+      <li>"Not yet. We set 14 days and a sample size for a reason: early p-values bounce, and stopping at the first p &lt; 0.05 turns a 5 % false-positive rate into 20 %+. Also day 3 hasn't seen a weekend, and early effects are often novelty. If we must be able to stop early, we design the next test as a sequential test."</li>
+      <li>Yes — sample ratio mismatch. Expected 500,000 each; SE of the count = √(1,000,000 × 0.25) = 500; observed deviation 1,912 = 3.8 SE → p ≈ 0.0001. Assignment or logging is broken; don't trust the result until explained.</li>
+      <li>Interference: a bill split involves several users, some in A and some in B, so treatment leaks into control. Randomise by group/cluster (the set of people who split bills together), or by region or time.</li>
+      <li>The mean is driven by three accounts — it's noise, not the feature. Winsorise/cap, use log revenue or a rank test, report medians and the share of paying users, and check whether the result survives removing them.</li>
+      <li>Randomise the <em>offer</em>: half of eligible users see the feature prompt, half don't. Compare retention of the two whole groups (intent-to-treat), regardless of who enabled it. That removes the self-selection.</li>
+      <li>To validate the machinery (randomisation, logging, the test statistic) and to learn the natural variability of the metrics. If A/A tests come out "significant" more than 5 % of the time, every later result is suspect.</li>
+    </ol>
+  </section>
+
+  <p class="colophon">
+    Tomás Zanchetti · Revolut ML Basics · Module 2 — Statistics · 05/10/2026<br>
+    Next: Module 3 — Maths for ML: what a model is, loss and optimisation, bias–variance, under- and overfitting, validation, leakage.
+  </p>
+
+</div>
+</body>
+</html>

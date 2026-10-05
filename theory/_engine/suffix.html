@@ -1,0 +1,75 @@
+/* ---------- timeline ---------- */
+// Every caption gets at least the time needed to read / speak it; the animation inside a caption stretches to fit.
+S.forEach(s => { let tau=0; s.segs = s.cap.map((cp,k) => { const o0=cp[0], o1 = k+1<s.cap.length ? s.cap[k+1][0] : s.dur, L=o1-o0, words=cp[1].split(/\s+/).length, R=Math.max(L, words/2.25+1.3); const g={o0,L,R,tau,words}; tau+=R; return g; }); s.len=tau; });
+let off=0; S.forEach((s,i)=>{ s.start=off; s.i=i; off+=s.len; }); const TOTAL=off;
+function locate(T){ const s=sceneAt(T), tau=T-s.start; let k=0; for(let i=0;i<s.segs.length;i++) if(tau>=s.segs[i].tau) k=i; const g=s.segs[k]; return { s, k, t: g.o0 + clamp((tau-g.tau)/g.R)*g.L, segStart: s.start+g.tau, segEnd: s.start+g.tau+g.R, words:g.words }; }
+const sceneAt = T => { for(let i=S.length-1;i>=0;i--) if(T>=S[i].start) return S[i]; return S[0]; };
+
+/* ---------- audio (WebAudio) ---------- */
+let AC=null, master=null;
+function audioInit(){ if(AC) return; AC = new (window.AudioContext||window.webkitAudioContext)(); master = AC.createGain(); master.gain.value=.5; master.connect(AC.destination); }
+function tone(freq, dur=.18, type='sine', vol=.18, when=0){ if(!AC || !document.getElementById('snd').checked) return; const o=AC.createOscillator(), g=AC.createGain(), t0=AC.currentTime+when; o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(vol,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+dur); o.connect(g); g.connect(master); o.start(t0); o.stop(t0+dur+.02); }
+const chime = () => { tone(523.25,.5,'sine',.14); tone(659.25,.5,'sine',.11,.07); tone(783.99,.7,'sine',.09,.14); };
+const blip = () => tone(880,.09,'triangle',.07);
+
+/* ---------- voice-over (Web Speech) ---------- */
+// Only English voices are offered; the system default (often the OS language) is never used.
+const NOVELTY = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i;
+const PREFER = [/Google UK English Male/i, /Google UK English Female/i, /Daniel.*(Enhanced|Premium)/i, /Serena/i, /Kate/i, /Oliver/i, /^Daniel/i, /Arthur/i, /Martha/i, /Microsoft (Ryan|Sonia|Libby)/i, /Google US English/i, /Samantha.*(Enhanced|Premium)/i, /^Samantha/i, /Ava/i, /Alex/i, /Karen/i, /Moira/i];
+let VOICES = [];
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  const all = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name));
+  const rank = v => { const i = PREFER.findIndex(r => r.test(v.name)); return (i<0 ? 100 : i) + (/en[-_]GB/i.test(v.lang) ? 0 : 0.5); };
+  VOICES = all.sort((a,b) => rank(a)-rank(b));
+  const sel = document.getElementById('voicesel'); let saved = null; try { saved = localStorage.getItem('m1voice'); } catch(e) {}
+  sel.innerHTML = VOICES.length ? '' : '<option>no English voice installed</option>';
+  VOICES.forEach((v,i) => { const o=document.createElement('option'); o.value=v.name; o.textContent=`${v.name} (${v.lang})`; if(saved ? v.name===saved : i===0) o.selected=true; sel.appendChild(o); });
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+document.getElementById('voicesel').addEventListener('change', e => { try { localStorage.setItem('m1voice', e.target.value); } catch(err) {} speakNow('This is the voice you selected.'); });
+let speaking=false, speakUid=0, speakT0=0, speakMax=0;
+function speakNow(s){ if(!('speechSynthesis' in window)) return; if(!VOICES.length) loadVoices(); const v = VOICES.find(v => v.name===document.getElementById('voicesel').value) || VOICES[0]; if(!v) return;   // never fall back to a non-English default
+  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.voice=v; u.lang=v.lang; const sp=parseFloat(document.getElementById('speed').value); u.rate = 0.98*sp; u.pitch=1;
+  const id=++speakUid; speaking=true; speakT0=performance.now(); speakMax=(s.split(/\s+/).length/1.5+6)*1000/sp; u.onend = u.onerror = () => { if(id===speakUid) speaking=false; }; speechSynthesis.speak(u); }
+function stopSpeech(){ speakUid++; speaking=false; if('speechSynthesis' in window) speechSynthesis.cancel(); }
+function speak(s){ if(document.getElementById('voice').checked) speakNow(s); }
+document.getElementById('voice').addEventListener('change', e => { if(!e.target.checked) stopSpeech(); });
+
+/* ---------- render ---------- */
+let T=0, playing=false, last=0, prevScene=-1, prevCap=-1;
+function render(){
+  const loc=locate(T), s=loc.s, t=loc.t, k=loc.k;
+  c.setTransform(1,0,0,1,0,0); c.globalAlpha=1; c.fillStyle=COL.bg; c.fillRect(0,0,W,H);
+  if(s.i>0){ txt(`__LABEL__ · ${s.i}/${S.length-1}`, 70, 52, {size:15, mono:true, color:COL.acc}); txt(s.title, 70, 96, {size:36, weight:700}); }
+  c.save(); c.globalAlpha = Math.min(A(t,0,.4), 1 - A(t, s.dur-.35, .35)*.0); s.draw(t); c.restore();
+  const cap=s.cap[k][1], ca=ease(clamp((T-loc.segStart)/.35));
+  rect(60, 606, 1160, 92, COL.panel, .96, 10); strokeRect(60,606,1160,92,COL.rule,1,1,10);
+  { const F='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; const split=(size,maxW)=>{ c.save(); c.font=`400 ${size}px ${F}`; const out=[]; let l=''; for(const w of cap.split(' ')){ const n=l?l+' '+w:w; if(c.measureText(n).width>maxW && l){ out.push(l); l=w; } else l=n; } if(l) out.push(l); c.restore(); return out; };
+    let size=25, lines=split(25,1090); if(lines.length>2){ size=21; lines=split(21,1110); } if(lines.length>3){ size=18; lines=split(18,1120); }
+    const lh=size+7, y0=652 - (lines.length-1)*lh/2 + size*.35; c.save(); c.globalAlpha=ca; lines.forEach((l,i)=> txt(l, 640, y0+i*lh, {size, align:'center'})); c.restore(); }
+  if(playing){ if(s.i!==prevScene){ chime(); } if(s.i!==prevScene || k!==prevCap){ if(s.i===prevScene) blip(); speak(cap); } }
+  prevScene=s.i; prevCap=k;
+  document.getElementById('fill').style.width = (T/TOTAL*100)+'%';
+  const mm = x => `${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`; document.getElementById('time').textContent = `${mm(T)} / ${mm(TOTAL)}`;
+  document.querySelectorAll('#scenes button').forEach((b,i)=> b.classList.toggle('on', i===s.i));
+}
+function frame(now){ if(playing){ const dt=Math.min((now-last)/1000,.1); last=now; let nt = T + dt*parseFloat(document.getElementById('speed').value);
+  if(speaking && now-speakT0 > speakMax) speaking=false;                      // safety net if the browser never fires 'end'
+  if(speaking && document.getElementById('voice').checked){ const e=locate(T).segEnd; if(nt >= e-.03) nt = Math.max(T, e-.03); }   // hold on the last frame until the sentence is finished
+  T = nt; if(T>=TOTAL){ T=TOTAL-.01; setPlay(false); } render(); requestAnimationFrame(frame); } }
+function setPlay(p){ playing=p; document.getElementById('play').textContent = p?'❚❚ Pause':'▶ Play'; if(p){ audioInit(); if(AC.state==='suspended') AC.resume(); if(T>=TOTAL-.05) T=0; prevScene=-1; prevCap=-1; last=performance.now(); requestAnimationFrame(frame); } else stopSpeech(); }
+function seek(x){ T=clamp(x,0,TOTAL-.01); prevScene=-1; prevCap=-1; stopSpeech(); render(); }
+
+/* ---------- UI ---------- */
+const track=document.getElementById('track'); S.forEach(s=>{ if(s.i){ const d=document.createElement('div'); d.className='tick'; d.style.left=(s.start/TOTAL*100)+'%'; track.appendChild(d); } });
+track.addEventListener('click', e=>{ const r=track.getBoundingClientRect(); seek((e.clientX-r.left)/r.width*TOTAL); });
+const sc=document.getElementById('scenes'); S.forEach(s=>{ const b=document.createElement('button'); b.textContent = s.i===0 ? 'Intro' : `${s.i} · ${s.title.split(' — ')[0]}`; b.onclick=()=>seek(s.start); sc.appendChild(b); });
+document.getElementById('play').onclick=()=>setPlay(!playing); cv.onclick=()=>setPlay(!playing);
+document.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); setPlay(!playing); } const s=sceneAt(T); if(e.code==='ArrowRight') seek(S[Math.min(s.i+1,S.length-1)].start); if(e.code==='ArrowLeft') seek(S[Math.max(s.i-(T-s.start<1.5?1:0),0)].start); });
+window.__seek = seek; window.__total = TOTAL; window.__scenes = S.map(s=>({i:s.i,start:s.start,dur:s.len,title:s.title,segs:s.segs.map(g=>g.tau)}));
+render();
+})();
+</script>
+</body>
+</html>

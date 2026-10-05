@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root { --bg:#0E1417; --panel:#151D21; --ink:#E6EDF0; --mut:#9AA9B1; --acc:#7DBDD6; --rule:#232F35; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:1280px; margin:0 auto; padding:12px 16px 28px; }
+  canvas { width:100%; height:auto; display:block; background:var(--bg); border:1px solid var(--rule); border-radius:6px; cursor:pointer; }
+  .bar { display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap; }
+  button, select { background:var(--panel); color:var(--ink); border:1px solid var(--rule); border-radius:5px; padding:7px 12px; font-size:14px; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  #play { min-width:84px; font-weight:600; }
+  #time { font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--mut); min-width:96px; }
+  #track { position:relative; flex:1; min-width:200px; height:16px; background:var(--panel); border:1px solid var(--rule); border-radius:8px; cursor:pointer; overflow:hidden; }
+  #fill { position:absolute; left:0; top:0; bottom:0; width:0; background:var(--acc); opacity:.55; }
+  .tick { position:absolute; top:0; bottom:0; width:1px; background:#3a4a52; }
+  label { font-size:13px; color:var(--mut); display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .scenes { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .scenes button { font-size:12px; padding:4px 9px; color:var(--mut); }
+  .scenes button.on { color:var(--bg); background:var(--acc); border-color:var(--acc); }
+  .hint { color:var(--mut); font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="c" width="1280" height="720"></canvas>
+  <div class="bar">
+    <button id="play">▶ Play</button>
+    <span id="time">0:00 / 0:00</span>
+    <div id="track"><div id="fill"></div></div>
+    <select id="speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+    <label><input type="checkbox" id="snd" checked> Sound</label>
+    <label><input type="checkbox" id="voice"> Voice-over</label>
+    <select id="voicesel" title="Voice"></select>
+  </div>
+  <div class="scenes" id="scenes"></div>
+  <div class="hint">Space = play/pause · ← → = previous / next scene · click the bar or a chip to jump. Voice-over: pick an English voice in the menu next to the checkbox (it plays a sample when you change it).</div>
+</div>
+<script>
+(() => {
+const cv = document.getElementById('c'), c = cv.getContext('2d');
+const W = 1280, H = 720;
+const COL = { bg:'#0E1417', panel:'#151D21', ink:'#E6EDF0', mut:'#9AA9B1', faint:'#4A5A62', acc:'#7DBDD6', red:'#E4907E', green:'#74C7A0', yel:'#E5C07B', rule:'#232F35' };
+
+/* ---------- helpers ---------- */
+const clamp = (x,a=0,b=1) => Math.max(a, Math.min(b, x));
+const lerp = (a,b,t) => a + (b-a)*t;
+const ease = t => t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+const A = (t, s, d=0.7) => ease(clamp((t-s)/d));          // fade-in 0..1 starting at s
+function rng(seed){ let a = seed>>>0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a>>>15, 1|a); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+function gauss(r){ let u=0,v=0; while(u===0) u=r(); while(v===0) v=r(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function txt(s, x, y, o={}) {
+  c.save(); c.globalAlpha = (o.alpha ?? 1) * c.globalAlpha;
+  c.font = `${o.weight||400} ${o.size||24}px ${o.mono ? 'ui-monospace,Menlo,monospace' : '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'}`;
+  c.fillStyle = o.color || COL.ink; c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'alphabetic';
+  c.fillText(s, x, y); c.restore();
+}
+function wrap(s, x, y, maxW, lh, o={}) {
+  c.save(); c.font = `${o.weight||400} ${o.size||24}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif`;
+  const words = s.split(' '); let line = '', lines = [];
+  for (const w of words) { const t = line ? line+' '+w : w; if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); c.restore();
+  lines.forEach((l,i) => txt(l, x, y + i*lh, o)); return lines.length;
+}
+function rect(x,y,w,h,col,alpha=1,r=0){ c.save(); c.globalAlpha*=alpha; c.fillStyle=col; if(r){ c.beginPath(); c.roundRect(x,y,w,h,r); c.fill(); } else c.fillRect(x,y,w,h); c.restore(); }
+function strokeRect(x,y,w,h,col,alpha=1,lw=1.5,r=0){ c.save(); c.globalAlpha*=alpha; c.strokeStyle=col; c.lineWidth=lw; c.beginPath(); r?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h); c.stroke(); c.restore(); }
+function line(x1,y1,x2,y2,col,alpha=1,lw=2,dash){ c.save(); c.globalAlpha*=alpha; c.strokeStyle=col; c.lineWidth=lw; if(dash) c.setLineDash(dash); c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); c.restore(); }
+function dot(x,y,r,col,alpha=1){ c.save(); c.globalAlpha*=alpha; c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill(); c.restore(); }
+function arrow(x1,y1,x2,y2,col,alpha=1,lw=2.5){ line(x1,y1,x2,y2,col,alpha,lw); const a=Math.atan2(y2-y1,x2-x1); c.save(); c.globalAlpha*=alpha; c.fillStyle=col; c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-12*Math.cos(a-.4),y2-12*Math.sin(a-.4)); c.lineTo(x2-12*Math.cos(a+.4),y2-12*Math.sin(a+.4)); c.fill(); c.restore(); }
+const fmt = n => n.toLocaleString('en-US');
+
