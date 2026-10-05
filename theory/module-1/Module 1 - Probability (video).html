@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Module 1 — Probability in 5 minutes</title>
+<title>Module 1 — Probability, the visual tour</title>
 <style>
   :root { --bg:#0E1417; --panel:#151D21; --ink:#E6EDF0; --mut:#9AA9B1; --acc:#7DBDD6; --rule:#232F35; }
   * { box-sizing: border-box; }
@@ -88,6 +88,9 @@ const lognMed = (() => { const s=[...logn].sort((a,b)=>a-b); return s[1500]; })(
 const portA = (() => { const r=rng(66), a=[]; for(let i=0;i<60;i++) a.push(2400+150*gauss(r)); return a; })();
 const portB = (() => { const r=rng(67), a=[]; for(let i=0;i<60;i++) a.push(r()<.85 ? 600+150*gauss(r) : 12600+800*gauss(r)); return a; })();
 
+const scat = (() => { const mk=(seed,fn)=>{ const r=rng(seed), a=[]; for(let i=0;i<90;i++){ const x=r(); a.push([x, clamp(fn(x,r))]); } return a; };
+  return [ mk(71,(x,r)=> x*.8+.1+.07*gauss(r)), mk(72,(x,r)=> .9-x*.75+.09*gauss(r)), mk(73,(x,r)=> .5+.2*gauss(r)), mk(74,(x,r)=> 4*(x-.5)*(x-.5)*.85+.07+.04*gauss(r)) ]; })();
+
 /* ---------- shared grid of 1,000 customers ---------- */
 const GX=70, GY=128, GS=17.6, GC=40, GR=25;
 function gridPos(i){ return [GX + (i%GC)*GS + 8, GY + Math.floor(i/GC)*GS + 8]; }
@@ -95,8 +98,8 @@ function gridPos(i){ return [GX + (i%GC)*GS + 8, GY + Math.floor(i/GC)*GS + 8]; 
 /* ---------- scenes ---------- */
 const S = [];
 
-S.push({ title:'Probability in five minutes', dur:8,
-  cap:[[0,'Module one: probability. Fourteen ideas, each one with a picture.'],[4,'Rules first, then random variables, then the distributions.']],
+S.push({ title:'Probability — the visual tour', dur:8,
+  cap:[[0,'Module one: probability. Sixteen ideas, each one with a picture.'],[4,'Rules first, then random variables, then the distributions.']],
   draw(t){
     txt('MODULE 1', 640, 250, {size:26, color:COL.acc, align:'center', mono:true, alpha:A(t,0)});
     txt('Probability', 640, 340, {size:96, weight:700, align:'center', alpha:A(t,.3)});
@@ -156,6 +159,22 @@ S.push({ title:'OR adds — minus the overlap', dur:18,
     txt('P(A) + P(B) − P(A and B)', X, 430, {size:22, mono:true, color:COL.mut, alpha:A(t,13.5)});
   }});
 
+S.push({ title:'The complement — and what "independent" means', dur:27,
+  cap:[[0,'Sometimes the easiest route is the opposite event.'],[4,'Two independent checks, each failing five percent of the time. What is the chance that at least one fails?'],[10,'At least one equals one minus none. Both pass: ninety-five percent times ninety-five percent.'],[16,'So nine point seven five percent. Not ten: adding would count the corner where both fail twice.'],[21,'Independent means that knowing one tells you nothing about the other. Then, and only then, you multiply the plain probabilities.']],
+  draw(t){
+    const x0=110,y0=140,sz=420, f=sz*.05*2.2;   // fail strips drawn 2.2× for visibility
+    rect(x0,y0,sz,sz,'#1E3A32',A(t,4)); txt('both pass', x0+(sz-f)/2, y0+(sz-f)/2-6, {size:28, align:'center', color:COL.green, weight:600, alpha:A(t,10)}); txt('0.95 × 0.95 = 0.9025', x0+(sz-f)/2, y0+(sz-f)/2+30, {size:22, align:'center', mono:true, color:COL.green, alpha:A(t,11)});
+    rect(x0+sz-f,y0,f,sz,COL.red,A(t,5)*.8); rect(x0,y0+sz-f,sz,f,COL.red,A(t,6)*.8); rect(x0+sz-f,y0+sz-f,f,f,COL.yel,A(t,16));
+    txt('check 1 fails (5 %)', x0+sz+14, y0+60, {size:19, color:COL.red, alpha:A(t,5)}); txt('check 2 fails (5 %)', x0+10, y0+sz+26, {size:19, color:COL.red, alpha:A(t,6)});
+    txt('both fail', x0+sz+14, y0+sz-14, {size:19, color:COL.yel, alpha:A(t,16)});
+    const X=760;
+    txt('P(at least one)', X, 200, {size:26, mono:true, alpha:A(t,10)}); txt('= 1 − P(none)', X, 242, {size:26, mono:true, alpha:A(t,10.5)});
+    txt('= 1 − 0.9025', X, 284, {size:26, mono:true, alpha:A(t,12)}); txt('= 9.75 %', X, 338, {size:40, mono:true, weight:700, color:COL.green, alpha:A(t,16)});
+    txt('0.05 + 0.05 = 10 % ?', X, 396, {size:22, mono:true, color:COL.mut, alpha:A(t,17)}); if(t>18) line(X-4,388,X+290,388,COL.red,A(t,18,.4),3);
+    txt('independent:  P(B | A) = P(B)', X, 470, {size:24, mono:true, color:COL.acc, alpha:A(t,21)});
+    txt('then  P(A and B) = P(A) × P(B)', X, 508, {size:22, mono:true, color:COL.mut, alpha:A(t,23)});
+  }});
+
 S.push({ title:'Conditional — B becomes the whole world', dur:24,
   cap:[[0,'What is the default rate among customers who were late last month?'],[5,'Given B means: throw away everyone else. The world is now these hundred and twenty-three.'],[12,'Inside that world, forty-two defaulted.'],[16,'Forty-two out of one hundred and twenty-three: thirty-four percent. Not forty-two out of a thousand.'],[21,'A feature is useful exactly when this number differs from the base rate.']],
   draw(t){
@@ -174,8 +193,8 @@ S.push({ title:'Conditional — B becomes the whole world', dur:24,
     txt('base rate 22 %  →  34 % given late', X, 524, {size:22, color:COL.mut, alpha:A(t,21)});
   }});
 
-S.push({ title:'Bayes — why most alerts are false', dur:38,
-  cap:[[0,'One hundred thousand transactions. Fraud is zero point two percent: that thin red line on the left.'],[7,'The model catches ninety percent of fraud: one hundred and eighty.'],[12,'It also flags two percent of legitimate transactions. Two percent of a huge number: almost two thousand.'],[20,'Now stand inside the flagged world. One hundred and eighty real frauds among two thousand one hundred and seventy-six alerts.'],[27,'Probability of fraud given a flag: eight percent. A ninety percent detector, wrong ninety-two percent of the time it fires.'],[33,'The lever is the false-alarm rate. Cut it from two percent to zero point two, and precision jumps to forty-seven percent.']],
+S.push({ title:'Bayes — why most alerts are false', dur:46,
+  cap:[[0,'One hundred thousand transactions. Fraud is zero point two percent: that thin red line on the left.'],[7,'The model catches ninety percent of fraud: one hundred and eighty.'],[12,'It also flags two percent of legitimate transactions. Two percent of a huge number: almost two thousand.'],[20,'Now stand inside the flagged world. One hundred and eighty real frauds among two thousand one hundred and seventy-six alerts.'],[27,'Probability of fraud given a flag: eight percent. A ninety percent detector, wrong ninety-two percent of the time it fires.'],[33,'The first lever is the false-alarm rate. Cut it from two percent to zero point two, and precision jumps to forty-seven percent.'],[39,'The second lever is the prior. Point the same model at a risky segment, where five percent is fraud, and a flag now means seventy percent. Prior times likelihood, divided by evidence.']],
   draw(t){
     const x0=70,y0=150,w=640,h=390, fw=3;
     rect(x0+fw,y0,w-fw,h,'#22323A',A(t,0)); rect(x0,y0,fw,h,COL.red,A(t,0));
@@ -194,10 +213,30 @@ S.push({ title:'Bayes — why most alerts are false', dur:38,
     txt('= 8.3 %', X, 432, {size:44, mono:true, weight:700, color:COL.green, alpha:A(t,28)});
     txt('recall 90 %  ≠  precision 8 %', X, 474, {size:21, color:COL.mut, alpha:A(t,29.5)});
     const b=A(t,33,1); if(b>0){ rect(X,498,bw,40,COL.panel,b,6); strokeRect(X,498,bw,40,COL.rule,b,1.5,6); txt('false alarms 2 % → 0.2 %   ⇒   precision 47 %', X+bw/2, 525, {size:19, align:'center', color:COL.acc, alpha:b}); }
+    const b2=A(t,39,1); if(b2>0){ rect(X,548,bw,40,COL.panel,b2,6); strokeRect(X,548,bw,40,COL.rule,b2,1.5,6); txt('risky segment, prior 5 %   ⇒   precision 70 %', X+bw/2, 575, {size:19, align:'center', color:COL.yel, alpha:b2}); }
   }});
 
-S.push({ title:'Random variables — expectation and variance', dur:28,
-  cap:[[0,'A random variable is a number that depends on chance. Take the profit on one loan.'],[5,'Ninety-six percent of the time you earn eighty euros. Four percent of the time you lose six hundred.'],[11,'Expected value: each outcome weighted by its probability. Fifty-two euros eighty — a number that never actually happens.'],[17,'Variance is the other half. Two portfolios with the same average loss.'],[22,'One is steady. The other is fine most months and terrible in a few. Expectation sets the price; variance sets the capital.']],
+S.push({ title:'Random variables — discrete and continuous', dur:28,
+  cap:[[0,'A random variable is a number that depends on chance. There are two kinds.'],[4,'Discrete: separate values, like the number of defaults. Each value has its own probability, and the bars add up to one.'],[11,'Continuous: any value in a range, like an amount. Now probability is the area under a curve.'],[17,'The chance of exactly twelve euros thirty-seven is zero. You ask for a range instead.'],[22,'The cumulative curve is the running total. Where it crosses one half, you have the median.']],
+  draw(t){
+    const by=520;
+    txt('DISCRETE — probability of each value (PMF)', 80, 150, {size:19, color:COL.acc, mono:true, alpha:A(t,4)});
+    for(let k=0;k<=10;k++){ const pk=binomPMF(10,.3,k), a=A(t,4+k*.25,.5); rect(80+k*40, by-pk*1150*a, 30, pk*1150*a, COL.acc, .85); txt(String(k), 95+k*40, by+24, {size:17, align:'center', color:COL.mut, alpha:A(t,4)}); }
+    line(72,by,530,by,COL.rule,A(t,4)); txt('number of defaults', 300, by+50, {size:17, align:'center', color:COL.mut, alpha:A(t,4)}); txt('Σ bars = 1', 400, 240, {size:22, mono:true, color:COL.mut, alpha:A(t,8)});
+    const px=640, pw=540, f = x => { const z=(x-.42)/.17; return Math.exp(-.5*z*z)*(1+.9*x); }, X = u => px+u*pw, Y = u => by - f(u)*235;
+    const a=A(t,11,1.2);
+    txt('CONTINUOUS — density (PDF)', px, 150, {size:19, color:COL.green, mono:true, alpha:a});
+    if(t>17){ const sa=A(t,17,1); c.save(); c.globalAlpha=sa*.45; c.fillStyle=COL.green; c.beginPath(); c.moveTo(X(.6),by); for(let u=.6;u<=.74;u+=.005) c.lineTo(X(u),Y(u)); c.lineTo(X(.74),by); c.fill(); c.restore(); txt('P(a < X < b) = area', X(.76), by-120, {size:20, mono:true, color:COL.green, alpha:sa}); txt('a', X(.6), by+24, {size:18, align:'center', color:COL.mut, alpha:sa}); txt('b', X(.74), by+24, {size:18, align:'center', color:COL.mut, alpha:sa}); }
+    c.save(); c.globalAlpha=a; c.strokeStyle=COL.green; c.lineWidth=3.5; c.beginPath(); for(let u=0;u<=a;u+=.005){ u===0?c.moveTo(X(u),Y(u)):c.lineTo(X(u),Y(u)); } c.stroke(); c.restore();
+    line(px,by,px+pw,by,COL.rule,a); txt('amount →', px+pw, by+50, {size:17, align:'right', color:COL.mut, alpha:a});
+    if(t>22){ const ca=A(t,22,1.5); let tot=0; const N=200, cum=[]; for(let i=0;i<=N;i++){ tot+=f(i/N); cum.push(tot); } let med=0; for(let i=0;i<=N;i++){ if(cum[i]/tot>=.5){ med=i/N; break; } }
+      c.save(); c.globalAlpha=ca; c.strokeStyle=COL.yel; c.lineWidth=3; c.beginPath(); for(let i=0;i<=N*ca;i++){ const x=X(i/N), y=by-(cum[i]/tot)*300; i?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); c.restore();
+      line(px,by-150,px+pw,by-150,COL.yel,ca*.6,1.5,[5,5]); txt('0.5', px-10, by-144, {size:17, align:'right', color:COL.yel, alpha:ca}); txt('CDF: P(X ≤ x)', px+pw-150, by-312, {size:20, mono:true, color:COL.yel, alpha:ca});
+      line(X(med),by,X(med),by-150,COL.yel,A(t,24),2); txt('median', X(med), by+24, {size:18, align:'center', color:COL.yel, alpha:A(t,24)}); }
+  }});
+
+S.push({ title:'Expectation and variance', dur:36,
+  cap:[[0,'Two numbers summarise a random variable. Take the profit on one loan.'],[5,'Ninety-six percent of the time you earn eighty euros. Four percent of the time you lose six hundred.'],[11,'Expected value: each outcome weighted by its probability. Fifty-two euros eighty — a number that never actually happens.'],[17,'Variance is the other half. Two portfolios with the same average loss.'],[22,'One is steady. The other is fine most months and terrible in a few. Expectation sets the price; variance sets the capital.'],[28,'Two rules. Expected values always add up. Variances add only when things are independent — correlated loans are riskier than they look.']],
   draw(t){
     const X=80, f = A(t,17,1), top = 1-f*.0;
     c.save(); c.globalAlpha = 1 - .0*f;
@@ -209,13 +248,25 @@ S.push({ title:'Random variables — expectation and variance', dur:28,
     txt('0.04 × −600', 700, 272, {size:24, mono:true, alpha:A(t,12)}); txt('= −24.0', 870, 272, {size:24, mono:true, color:COL.red, alpha:A(t,12.5)});
     line(700,290,1000,290,COL.rule,A(t,13)); txt('E[profit] = €52.8', 700, 330, {size:30, mono:true, weight:700, color:COL.acc, alpha:A(t,13.5)});
     c.restore();
-    if(f>0){ const ax=120, aw=1040, toX = v => ax + clamp(v/14000)*aw;
+    const g2=A(t,28,1);
+    if(f>0){ c.save(); c.globalAlpha=1-.88*g2; const ax=120, aw=1040, toX = v => ax + clamp(v/14000)*aw;
       [['Portfolio A — steady', portA, 420, COL.acc],['Portfolio B — same average, fat tail', portB, 520, COL.red]].forEach(([lab,arr,y,col],k)=>{
         const al = A(t,17+k*2.5,1); txt(lab, ax, y-34, {size:21, color:col, weight:600, alpha:al}); line(ax,y,ax+aw,y,COL.rule,al);
         arr.forEach((v,i)=> dot(toX(v), y - 4 - (i%6)*4, 4.5, col, al*.8));
         line(toX(2400), y-32, toX(2400), y+10, COL.ink, al, 2, [4,4]); });
       txt('mean €2,400', toX(2400)+8, 548, {size:18, color:COL.mut, alpha:A(t,22)}); txt('monthly loss →', ax+aw, 566, {size:17, color:COL.mut, align:'right', alpha:f});
-    }
+      c.restore(); }
+    if(g2>0){ rect(170,392,940,150,COL.panel,g2,10); strokeRect(170,392,940,150,COL.rule,g2,1.5,10); txt('E[X + Y] = E[X] + E[Y]', 210, 446, {size:28, mono:true, color:COL.green, alpha:g2}); txt('always', 760, 446, {size:24, color:COL.green, alpha:g2}); txt('Var(X + Y) = Var(X) + Var(Y)', 210, 506, {size:28, mono:true, color:COL.yel, alpha:A(t,30)}); txt('only if independent', 760, 506, {size:24, color:COL.yel, alpha:A(t,30)}); }
+  }});
+
+S.push({ title:'Correlation — do two variables move together?', dur:26,
+  cap:[[0,'Do two variables move together? Correlation answers with a number between minus one and plus one.'],[6,'Close to plus one, they rise together. Close to minus one, one rises as the other falls.'],[12,'Around zero: no straight-line relationship.'],[16,'But zero does not mean unrelated. A perfect curve can have a correlation of zero.'],[21,'And correlation is not causation. Ice-cream sales and drownings both rise in summer.']],
+  draw(t){
+    const labs=[['r ≈ +0.9','rise together',COL.green,1],['r ≈ −0.8','one up, one down',COL.red,6],['r ≈ 0','no relation',COL.mut,12],['r ≈ 0','but clearly related!',COL.yel,16]];
+    labs.forEach(([l1,l2,col,st],i)=>{ const x0=70+i*292, y0=160, sz=250, a=A(t,st,1); strokeRect(x0,y0,sz,sz,COL.rule,a,1.5,6);
+      scat[i].forEach(([x,y],j)=> dot(x0+14+x*(sz-28), y0+sz-14-y*(sz-28), 4, col, a*A(t,st+j*.012,.3)*.9));
+      txt(l1, x0+sz/2, y0+sz+44, {size:30, weight:700, align:'center', mono:true, color:col, alpha:a}); txt(l2, x0+sz/2, y0+sz+76, {size:19, align:'center', color:COL.mut, alpha:a}); });
+    txt('corr(X, Y) = Cov(X, Y) / (σx · σy)        measures straight-line association only', 640, 570, {size:19, align:'center', mono:true, color:COL.faint, alpha:A(t,3)});
   }});
 
 S.push({ title:'Bernoulli — one yes/no trial', dur:18,
@@ -234,8 +285,8 @@ S.push({ title:'Bernoulli — one yes/no trial', dur:18,
     txt(`p = ${p.toFixed(2)}     mean = p     var = ${(p*(1-p)).toFixed(3)}`, px, 540, {size:22, mono:true, color:COL.mut});
   }});
 
-S.push({ title:'Binomial — count the yeses in n trials', dur:26,
-  cap:[[0,'Now take twenty loans, each with a twenty percent chance of default, independent.'],[5,'Count the defaults. Do it again. And again.'],[11,'The counts pile up around n times p: four defaults. That is the binomial distribution.'],[18,'Mean n p, variance n p times one minus p. Seeing ten defaults here would mean something changed.'],[23,'One warning: if loans are correlated, the real spread is wider than this.']],
+S.push({ title:'Binomial — count the yeses in n trials', dur:34,
+  cap:[[0,'Now take twenty loans, each with a twenty percent chance of default, independent.'],[5,'Count the defaults. Do it again. And again.'],[11,'The counts pile up around n times p: four defaults. That is the binomial distribution.'],[18,'Mean n p, variance n p times one minus p. Seeing ten defaults here would mean something changed.'],[23,'One warning: if loans are correlated, the real spread is wider than this.'],[27,'A quick one to do in your head. Five transactions, each with a ten percent chance of a dispute. At least one dispute is one minus zero point nine to the fifth: forty-one percent.']],
   draw(t){
     const n = Math.max(1, Math.floor(320*Math.pow(clamp((t-2)/17),1.5)));
     const cur = binom[n-1];
@@ -248,6 +299,7 @@ S.push({ title:'Binomial — count the yeses in n trials', dur:26,
     line(hx-10,hy,hx+13*bw,hy,COL.rule); txt('number of defaults in the portfolio', hx+13*bw/2, hy+54, {size:18, align:'center', color:COL.mut});
     const a=A(t,18,1); if(a>0){ c.save(); c.globalAlpha=a; c.strokeStyle=COL.yel; c.lineWidth=2.5; c.beginPath(); for(let k=0;k<=12;k++){ const y=hy - binomPMF(20,.2,k)*n*sc, x=hx+k*bw+(bw-10)/2; k?c.lineTo(x,y):c.moveTo(x,y); } c.stroke(); for(let k=0;k<=12;k++) dot(hx+k*bw+(bw-10)/2, hy - binomPMF(20,.2,k)*n*sc, 5, COL.yel); c.restore();
       txt('mean = np = 4      sd = √(np(1−p)) ≈ 1.8', 1160, 270, {size:22, mono:true, align:'right', color:COL.yel, alpha:a}); }
+    const w2=A(t,27,1); if(w2>0){ rect(700,300,470,112,COL.panel,w2,8); strokeRect(700,300,470,112,COL.rule,w2,1.5,8); txt('n = 5, p = 0.1', 722, 336, {size:20, mono:true, color:COL.mut, alpha:w2}); txt('P(≥ 1) = 1 − 0.9⁵ = 41 %', 722, 372, {size:24, mono:true, color:COL.green, alpha:A(t,29)}); txt('P(X = k) = C(n,k) pᵏ (1−p)ⁿ⁻ᵏ', 722, 400, {size:17, mono:true, color:COL.faint, alpha:w2}); }
   }});
 
 S.push({ title:'Poisson — rare events per window', dur:30,
@@ -269,8 +321,8 @@ S.push({ title:'Poisson — rare events per window', dur:30,
     txt('P(X = k) = e^(−λ) λᵏ / k!', X, 566, {size:20, mono:true, color:COL.mut, alpha:second?0:A(t,11)});
   }});
 
-S.push({ title:'Normal — the bell curve', dur:28,
-  cap:[[0,'The normal distribution: symmetric, bell-shaped, described by a mean and a standard deviation.'],[5,'Sixty-eight percent of values fall within one standard deviation.'],[10,'Ninety-five percent within two.'],[14,'Ninety-nine point seven within three.'],[18,'A z-score says how many standard deviations a value is from the mean. Z of two: the top two and a half percent.'],[24,'It is everywhere because averages of almost anything become normal. But single amounts of money do not.']],
+S.push({ title:'Normal — the bell curve', dur:34,
+  cap:[[0,'The normal distribution: symmetric, bell-shaped, described by a mean and a standard deviation.'],[5,'Sixty-eight percent of values fall within one standard deviation.'],[10,'Ninety-five percent within two.'],[14,'Ninety-nine point seven within three.'],[18,'A z-score says how many standard deviations a value is from the mean. Z of two: the top two and a half percent.'],[24,'It is everywhere because averages of almost anything become normal. But single amounts of money do not.'],[29,'To check whether data is normal, look at it: a histogram, the mean close to the median, or a Q-Q plot along the diagonal.']],
   draw(t){
     const mu=640, sg=125, base=540, amp=330, f = x => Math.exp(-.5*Math.pow((x-mu)/sg,2));
     const shade = (k, col, al) => { if(al<=0) return; c.save(); c.globalAlpha=al; c.fillStyle=col; c.beginPath(); c.moveTo(mu-k*sg, base); for(let x=mu-k*sg; x<=mu+k*sg; x+=3) c.lineTo(x, base - f(x)*amp); c.lineTo(mu+k*sg, base); c.fill(); c.restore(); };
@@ -283,6 +335,7 @@ S.push({ title:'Normal — the bell curve', dur:28,
     txt('99.7 %', mu-2.75*sg, base-36, {size:19, align:'center', color:COL.mut, alpha:A(t,14)}); txt('99.7 %', mu+2.75*sg, base-36, {size:19, align:'center', color:COL.mut, alpha:A(t,14)});
     const a=A(t,18,1); if(a>0){ line(mu+2*sg, base, mu+2*sg, base-190, COL.yel, a, 3); dot(mu+2*sg, base-190, 7, COL.yel, a); txt('z = (x − μ) / σ = 2', mu+2*sg+16, base-196, {size:22, mono:true, color:COL.yel, alpha:a}); txt('2.5 % beyond', mu+2*sg+16, base-166, {size:19, color:COL.mut, alpha:a}); }
     txt('parameters: μ (centre), σ (width)', 70, 160, {size:21, color:COL.mut, alpha:A(t,1)});
+    txt('check: histogram · mean ≈ median · Q-Q plot', 70, 192, {size:21, color:COL.acc, alpha:A(t,29)});
   }});
 
 S.push({ title:'Heavy tails — money is not normal', dur:24,
@@ -300,8 +353,8 @@ S.push({ title:'Heavy tails — money is not normal', dur:24,
     txt('log(x) is normal', hx+hw-10, 170, {size:26, align:'right', color:COL.yel, weight:600, alpha:A(t,19)});
   }});
 
-S.push({ title:'How they relate', dur:14,
-  cap:[[0,'One trial is Bernoulli. Add up n of them and you get the Binomial.'],[5,'Many trials with a tiny probability: Poisson. Many trials in general: Normal.'],[10,'And positive, multiplicative quantities become normal after a log.']],
+S.push({ title:'How they relate', dur:21,
+  cap:[[0,'One trial is Bernoulli. Add up n of them and you get the Binomial.'],[5,'Many trials with a tiny probability: Poisson. Many trials in general: Normal.'],[10,'And positive, multiplicative quantities become normal after a log.'],[14,'Two more worth one line each. The exponential is the waiting time between Poisson events. The uniform makes every value equally likely.']],
   draw(t){
     const box = (x,y,w,lab,sub,col,al) => { rect(x,y,w,84,COL.panel,al,10); strokeRect(x,y,w,84,col,al,2.5,10); txt(lab, x+w/2, y+38, {size:26, weight:700, align:'center', color:col, alpha:al}); txt(sub, x+w/2, y+66, {size:17, align:'center', color:COL.mut, alpha:al}); };
     box(70,190,230,'Bernoulli','one yes / no',COL.acc,A(t,0));
@@ -314,9 +367,10 @@ S.push({ title:'How they relate', dur:14,
     box(420,420,230,'Log-normal','money, sizes',COL.red,A(t,10));
     arrow(654,452,930,372,COL.mut,A(t,11)); txt('take the log', 800, 440, {size:16, align:'center', color:COL.mut, alpha:A(t,11)});
     txt('any variable — average many of them → Normal (central limit theorem, Module 2)', 640, 566, {size:19, align:'center', color:COL.mut, alpha:A(t,8.5)});
+    box(70,330,230,'Exponential','time between events',COL.green,A(t,14)); box(70,440,230,'Uniform','all values equally likely',COL.mut,A(t,16));
   }});
 
-S.push({ title:'Six sentences to keep', dur:16,
+S.push({ title:'Six sentences to keep', dur:18,
   cap:[[0,'Six sentences to keep.'],[2,'AND multiplies, OR adds, GIVEN shrinks the world.'],[6,'With rare events, the false-alarm rate drives precision — and Bayes shows why.'],[10,'Know each distribution by what it counts, and never trust an average of money.'],[14,'Now do the exercises.']],
   draw(t){
     const L = ['AND multiplies · OR adds (minus the overlap) · GIVEN shrinks the world','Bayes flips a conditional: prior × likelihood ÷ evidence','Rare event + imperfect detector = most alerts are false','Expectation sets the price; variance sets the risk','Bernoulli: one trial · Binomial: n trials · Poisson: rare events per window · Normal: averages','Money is heavy-tailed: median, percentiles, log'];
@@ -324,9 +378,11 @@ S.push({ title:'Six sentences to keep', dur:16,
   }});
 
 /* ---------- timeline ---------- */
-let off=0; S.forEach((s,i)=>{ s.start=off; s.i=i; off+=s.dur; }); const TOTAL=off;
+// Every caption gets at least the time needed to read / speak it; the animation inside a caption stretches to fit.
+S.forEach(s => { let tau=0; s.segs = s.cap.map((cp,k) => { const o0=cp[0], o1 = k+1<s.cap.length ? s.cap[k+1][0] : s.dur, L=o1-o0, words=cp[1].split(/\s+/).length, R=Math.max(L, words/2.25+1.3); const g={o0,L,R,tau,words}; tau+=R; return g; }); s.len=tau; });
+let off=0; S.forEach((s,i)=>{ s.start=off; s.i=i; off+=s.len; }); const TOTAL=off;
+function locate(T){ const s=sceneAt(T), tau=T-s.start; let k=0; for(let i=0;i<s.segs.length;i++) if(tau>=s.segs[i].tau) k=i; const g=s.segs[k]; return { s, k, t: g.o0 + clamp((tau-g.tau)/g.R)*g.L, segStart: s.start+g.tau, segEnd: s.start+g.tau+g.R, words:g.words }; }
 const sceneAt = T => { for(let i=S.length-1;i>=0;i--) if(T>=S[i].start) return S[i]; return S[0]; };
-const capAt = (s,t) => { let k=0; for(let i=0;i<s.cap.length;i++) if(t>=s.cap[i][0]) k=i; return k; };
 
 /* ---------- audio (WebAudio) ---------- */
 let AC=null, master=null;
@@ -351,30 +407,38 @@ function loadVoices(){
 }
 if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 document.getElementById('voicesel').addEventListener('change', e => { try { localStorage.setItem('m1voice', e.target.value); } catch(err) {} speakNow('This is the voice you selected.'); });
+let speaking=false, speakUid=0, speakT0=0, speakMax=0;
 function speakNow(s){ if(!('speechSynthesis' in window)) return; if(!VOICES.length) loadVoices(); const v = VOICES.find(v => v.name===document.getElementById('voicesel').value) || VOICES[0]; if(!v) return;   // never fall back to a non-English default
-  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.voice=v; u.lang=v.lang; u.rate = 0.98*parseFloat(document.getElementById('speed').value); u.pitch=1; speechSynthesis.speak(u); }
+  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.voice=v; u.lang=v.lang; const sp=parseFloat(document.getElementById('speed').value); u.rate = 0.98*sp; u.pitch=1;
+  const id=++speakUid; speaking=true; speakT0=performance.now(); speakMax=(s.split(/\s+/).length/1.5+6)*1000/sp; u.onend = u.onerror = () => { if(id===speakUid) speaking=false; }; speechSynthesis.speak(u); }
+function stopSpeech(){ speakUid++; speaking=false; if('speechSynthesis' in window) speechSynthesis.cancel(); }
 function speak(s){ if(document.getElementById('voice').checked) speakNow(s); }
+document.getElementById('voice').addEventListener('change', e => { if(!e.target.checked) stopSpeech(); });
 
 /* ---------- render ---------- */
 let T=0, playing=false, last=0, prevScene=-1, prevCap=-1;
 function render(){
-  const s=sceneAt(T), t=T-s.start;
+  const loc=locate(T), s=loc.s, t=loc.t, k=loc.k;
   c.setTransform(1,0,0,1,0,0); c.globalAlpha=1; c.fillStyle=COL.bg; c.fillRect(0,0,W,H);
   if(s.i>0){ txt(`MODULE 1 · PROBABILITY · ${s.i}/${S.length-1}`, 70, 52, {size:15, mono:true, color:COL.acc}); txt(s.title, 70, 96, {size:36, weight:700}); }
   c.save(); c.globalAlpha = Math.min(A(t,0,.4), 1 - A(t, s.dur-.35, .35)*.0); s.draw(t); c.restore();
-  const k=capAt(s,t), cap=s.cap[k][1], ca=A(t, s.cap[k][0], .35);
+  const cap=s.cap[k][1], ca=ease(clamp((T-loc.segStart)/.35));
   rect(60, 606, 1160, 92, COL.panel, .96, 10); strokeRect(60,606,1160,92,COL.rule,1,1,10);
-  c.save(); c.font='400 25px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; const one = c.measureText(cap).width <= 1100; c.restore();
-  c.save(); c.globalAlpha=ca; if(one) txt(cap, 640, 661, {size:25, align:'center'}); else { c.textAlign='center'; const words=cap.split(' '); let l1='', i=0; c.font='400 25px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; while(i<words.length && c.measureText(l1+' '+words[i]).width<1090){ l1 += (l1?' ':'')+words[i]; i++; } txt(l1, 640, 645, {size:25, align:'center'}); txt(words.slice(i).join(' '), 640, 679, {size:25, align:'center'}); } c.restore();
+  { const F='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; const split=(size,maxW)=>{ c.save(); c.font=`400 ${size}px ${F}`; const out=[]; let l=''; for(const w of cap.split(' ')){ const n=l?l+' '+w:w; if(c.measureText(n).width>maxW && l){ out.push(l); l=w; } else l=n; } if(l) out.push(l); c.restore(); return out; };
+    let size=25, lines=split(25,1090); if(lines.length>2){ size=21; lines=split(21,1110); } if(lines.length>3){ size=18; lines=split(18,1120); }
+    const lh=size+7, y0=652 - (lines.length-1)*lh/2 + size*.35; c.save(); c.globalAlpha=ca; lines.forEach((l,i)=> txt(l, 640, y0+i*lh, {size, align:'center'})); c.restore(); }
   if(playing){ if(s.i!==prevScene){ chime(); } if(s.i!==prevScene || k!==prevCap){ if(s.i===prevScene) blip(); speak(cap); } }
   prevScene=s.i; prevCap=k;
   document.getElementById('fill').style.width = (T/TOTAL*100)+'%';
   const mm = x => `${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`; document.getElementById('time').textContent = `${mm(T)} / ${mm(TOTAL)}`;
   document.querySelectorAll('#scenes button').forEach((b,i)=> b.classList.toggle('on', i===s.i));
 }
-function frame(now){ if(playing){ const dt=(now-last)/1000; last=now; T += dt*parseFloat(document.getElementById('speed').value); if(T>=TOTAL){ T=TOTAL-.01; setPlay(false); } render(); requestAnimationFrame(frame); } }
-function setPlay(p){ playing=p; document.getElementById('play').textContent = p?'❚❚ Pause':'▶ Play'; if(p){ audioInit(); if(AC.state==='suspended') AC.resume(); if(T>=TOTAL-.05) T=0; prevScene=-1; prevCap=-1; last=performance.now(); requestAnimationFrame(frame); } else if('speechSynthesis' in window) speechSynthesis.cancel(); }
-function seek(x){ T=clamp(x,0,TOTAL-.01); prevScene=-1; prevCap=-1; if('speechSynthesis' in window) speechSynthesis.cancel(); render(); }
+function frame(now){ if(playing){ const dt=Math.min((now-last)/1000,.1); last=now; let nt = T + dt*parseFloat(document.getElementById('speed').value);
+  if(speaking && now-speakT0 > speakMax) speaking=false;                      // safety net if the browser never fires 'end'
+  if(speaking && document.getElementById('voice').checked){ const e=locate(T).segEnd; if(nt >= e-.03) nt = Math.max(T, e-.03); }   // hold on the last frame until the sentence is finished
+  T = nt; if(T>=TOTAL){ T=TOTAL-.01; setPlay(false); } render(); requestAnimationFrame(frame); } }
+function setPlay(p){ playing=p; document.getElementById('play').textContent = p?'❚❚ Pause':'▶ Play'; if(p){ audioInit(); if(AC.state==='suspended') AC.resume(); if(T>=TOTAL-.05) T=0; prevScene=-1; prevCap=-1; last=performance.now(); requestAnimationFrame(frame); } else stopSpeech(); }
+function seek(x){ T=clamp(x,0,TOTAL-.01); prevScene=-1; prevCap=-1; stopSpeech(); render(); }
 
 /* ---------- UI ---------- */
 const track=document.getElementById('track'); S.forEach(s=>{ if(s.i){ const d=document.createElement('div'); d.className='tick'; d.style.left=(s.start/TOTAL*100)+'%'; track.appendChild(d); } });
@@ -382,7 +446,7 @@ track.addEventListener('click', e=>{ const r=track.getBoundingClientRect(); seek
 const sc=document.getElementById('scenes'); S.forEach(s=>{ const b=document.createElement('button'); b.textContent = s.i===0 ? 'Intro' : `${s.i} · ${s.title.split(' — ')[0]}`; b.onclick=()=>seek(s.start); sc.appendChild(b); });
 document.getElementById('play').onclick=()=>setPlay(!playing); cv.onclick=()=>setPlay(!playing);
 document.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); setPlay(!playing); } const s=sceneAt(T); if(e.code==='ArrowRight') seek(S[Math.min(s.i+1,S.length-1)].start); if(e.code==='ArrowLeft') seek(S[Math.max(s.i-(T-s.start<1.5?1:0),0)].start); });
-window.__seek = seek; window.__total = TOTAL; window.__scenes = S.map(s=>({i:s.i,start:s.start,dur:s.dur,title:s.title}));
+window.__seek = seek; window.__total = TOTAL; window.__scenes = S.map(s=>({i:s.i,start:s.start,dur:s.len,title:s.title,segs:s.segs.map(g=>g.tau)}));
 render();
 })();
 </script>
