@@ -27,7 +27,7 @@ Decision 29/09: one module per topic, from zero upwards, concepts shown in real 
 |---|---|---|---|
 | 1 | **Probability** — rules, random variables, Bernoulli · Binomial · Poisson · Normal · heavy tails | 2 | ✅ PDF (29/09) + video (05/10) |
 | 2 | **Statistics** — population vs. sample, bias (all kinds), sampling, CLT, confidence intervals, tests, p-values, power, A/B end to end | 3 | ✅ PDF + video (05/10) |
-| 3 | **Maths for ML** — what a model is, loss, bias–variance, under/overfitting, validation, leakage | 1 | ⏳ 05/10 |
+| 3 | **Maths for ML** — what a model is, loss, gradient descent, bias–variance, regularisation, validation, leakage, metrics (confusion matrix, precision/recall, ROC/PR-AUC) | 1 | ✅ PDF + video (05/10) |
 | 4 | **The models** — linear/logistic regression, regularisation, metrics, kNN, naive Bayes, trees, random forest, gradient boosting, SVM, neural nets, k-means — pros/cons and when | 4 | ⏳ 05/10 |
 
 ## Track A (old plan, superseded) — Theory (one PDF per module, in `theory/`)

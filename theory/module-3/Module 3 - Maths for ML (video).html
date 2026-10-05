@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 3 — Maths for ML, the visual tour</title>
+<style>
+  :root { --bg:#0E1417; --panel:#151D21; --ink:#E6EDF0; --mut:#9AA9B1; --acc:#7DBDD6; --rule:#232F35; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:1280px; margin:0 auto; padding:12px 16px 28px; }
+  canvas { width:100%; height:auto; display:block; background:var(--bg); border:1px solid var(--rule); border-radius:6px; cursor:pointer; }
+  .bar { display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap; }
+  button, select { background:var(--panel); color:var(--ink); border:1px solid var(--rule); border-radius:5px; padding:7px 12px; font-size:14px; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  #play { min-width:84px; font-weight:600; }
+  #time { font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--mut); min-width:96px; }
+  #track { position:relative; flex:1; min-width:200px; height:16px; background:var(--panel); border:1px solid var(--rule); border-radius:8px; cursor:pointer; overflow:hidden; }
+  #fill { position:absolute; left:0; top:0; bottom:0; width:0; background:var(--acc); opacity:.55; }
+  .tick { position:absolute; top:0; bottom:0; width:1px; background:#3a4a52; }
+  label { font-size:13px; color:var(--mut); display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .scenes { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .scenes button { font-size:12px; padding:4px 9px; color:var(--mut); }
+  .scenes button.on { color:var(--bg); background:var(--acc); border-color:var(--acc); }
+  .hint { color:var(--mut); font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="c" width="1280" height="720"></canvas>
+  <div class="bar">
+    <button id="play">▶ Play</button>
+    <span id="time">0:00 / 0:00</span>
+    <div id="track"><div id="fill"></div></div>
+    <select id="speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+    <label><input type="checkbox" id="snd" checked> Sound</label>
+    <label><input type="checkbox" id="voice"> Voice-over</label>
+    <select id="voicesel" title="Voice"></select>
+  </div>
+  <div class="scenes" id="scenes"></div>
+  <div class="hint">Space = play/pause · ← → = previous / next scene · click the bar or a chip to jump. Voice-over: pick an English voice in the menu next to the checkbox (it plays a sample when you change it).</div>
+</div>
+<script>
+(() => {
+const cv = document.getElementById('c'), c = cv.getContext('2d');
+const W = 1280, H = 720;
+const COL = { bg:'#0E1417', panel:'#151D21', ink:'#E6EDF0', mut:'#9AA9B1', faint:'#4A5A62', acc:'#7DBDD6', red:'#E4907E', green:'#74C7A0', yel:'#E5C07B', rule:'#232F35' };
+
+/* ---------- helpers ---------- */
+const clamp = (x,a=0,b=1) => Math.max(a, Math.min(b, x));
+const lerp = (a,b,t) => a + (b-a)*t;
+const ease = t => t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+const A = (t, s, d=0.7) => ease(clamp((t-s)/d));          // fade-in 0..1 starting at s
+function rng(seed){ let a = seed>>>0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a>>>15, 1|a); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+function gauss(r){ let u=0,v=0; while(u===0) u=r(); while(v===0) v=r(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function txt(s, x, y, o={}) {
+  c.save(); c.globalAlpha = (o.alpha ?? 1) * c.globalAlpha;
+  c.font = `${o.weight||400} ${o.size||24}px ${o.mono ? 'ui-monospace,Menlo,monospace' : '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'}`;
+  c.fillStyle = o.color || COL.ink; c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'alphabetic';
+  c.fillText(s, x, y); c.restore();
+}
+function wrap(s, x, y, maxW, lh, o={}) {
+  c.save(); c.font = `${o.weight||400} ${o.size||24}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif`;
+  const words = s.split(' '); let line = '', lines = [];
+  for (const w of words) { const t = line ? line+' '+w : w; if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); c.restore();
+  lines.forEach((l,i) => txt(l, x, y + i*lh, o)); return lines.length;
+}
+function rect(x,y,w,h,col,alpha=1,r=0){ c.save(); c.globalAlpha*=alpha; c.fillStyle=col; if(r){ c.beginPath(); c.roundRect(x,y,w,h,r); c.fill(); } else c.fillRect(x,y,w,h); c.restore(); }
+function strokeRect(x,y,w,h,col,alpha=1,lw=1.5,r=0){ c.save(); c.globalAlpha*=alpha; c.strokeStyle=col; c.lineWidth=lw; c.beginPath(); r?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h); c.stroke(); c.restore(); }
+function line(x1,y1,x2,y2,col,alpha=1,lw=2,dash){ c.save(); c.globalAlpha*=alpha; c.strokeStyle=col; c.lineWidth=lw; if(dash) c.setLineDash(dash); c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); c.restore(); }
+function dot(x,y,r,col,alpha=1){ c.save(); c.globalAlpha*=alpha; c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill(); c.restore(); }
+function arrow(x1,y1,x2,y2,col,alpha=1,lw=2.5){ line(x1,y1,x2,y2,col,alpha,lw); const a=Math.atan2(y2-y1,x2-x1); c.save(); c.globalAlpha*=alpha; c.fillStyle=col; c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-12*Math.cos(a-.4),y2-12*Math.sin(a-.4)); c.lineTo(x2-12*Math.cos(a+.4),y2-12*Math.sin(a+.4)); c.fill(); c.restore(); }
+const fmt = n => n.toLocaleString('en-US');
+
+/* ---------- precomputed data (seeded so scrubbing is stable) ---------- */
+const nd = z => Math.exp(-z*z/2);
+function Phi(z){ const t=1/(1+0.2316419*Math.abs(z)), d=0.3989423*Math.exp(-z*z/2); const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274)))); return z>0 ? 1-p : p; }
+function polyfit(xs, ys, deg, lam=1e-9){ const n=deg+1, M=Array.from({length:n},()=>Array(n+1).fill(0));
+  xs.forEach((x,i)=>{ const u=2*x-1, pw=[1]; for(let k=1;k<n;k++) pw.push(pw[k-1]*u); for(let a=0;a<n;a++){ for(let b=0;b<n;b++) M[a][b]+=pw[a]*pw[b]; M[a][n]+=pw[a]*ys[i]; } });
+  for(let a=0;a<n;a++) M[a][a]+=lam;
+  for(let i=0;i<n;i++){ let p=i; for(let r=i+1;r<n;r++) if(Math.abs(M[r][i])>Math.abs(M[p][i])) p=r; [M[i],M[p]]=[M[p],M[i]]; const d=M[i][i]||1e-12; for(let j=i;j<=n;j++) M[i][j]/=d; for(let r=0;r<n;r++) if(r!==i){ const f=M[r][i]; for(let j=i;j<=n;j++) M[r][j]-=f*M[i][j]; } }
+  return M.map(r=>r[n]); }
+function polyval(w,x){ const u=2*x-1; let s=0,p=1; for(const k of w){ s+=k*p; p*=u; } return s; }
+const tf = x => 0.5+0.3*Math.sin(2*Math.PI*x);
+function sample(seed, n){ const r=rng(seed), xs=[], ys=[]; for(let i=0;i<n;i++) xs.push((i+0.15+0.7*r())/n); xs.forEach(x=>ys.push(tf(x)+0.085*gauss(r))); return {xs,ys}; }
+const mse = (w,d) => d.xs.reduce((s,x,i)=>s+Math.pow(polyval(w,x)-d.ys[i],2),0)/d.xs.length;
+const trainD = sample(301,14), testD = sample(302,60);
+const fits = { under: polyfit(trainD.xs,trainD.ys,1), good: polyfit(trainD.xs,trainD.ys,3), over: polyfit(trainD.xs,trainD.ys,11,1e-10) };
+const fitErr = Object.fromEntries(Object.entries(fits).map(([k,w])=>[k,{tr:mse(w,trainD), te:mse(w,testD)}]));
+const resamp = (() => { const out=[]; for(let s=0;s<8;s++){ const d=sample(400+s,14); out.push({simple:polyfit(d.xs,d.ys,1), flex:polyfit(d.xs,d.ys,9,1e-9)}); } return out; })();
+const curveErr = (() => { const out=[]; for(let deg=1; deg<=10; deg++){ let tr=0, te=0; for(let s=0;s<30;s++){ const d=sample(500+s,14), w=polyfit(d.xs,d.ys,deg,1e-9), t2=sample(900+s,80); tr+=mse(w,d); te+=Math.min(mse(w,t2),0.2); } out.push({deg, tr:tr/30, te:te/30}); } return out; })();
+const linD = (() => { const r=rng(310), a=[]; for(let i=0;i<22;i++){ const x=0.05+0.9*r(); a.push([x, 0.22+0.55*x+0.07*gauss(r)]); } return a; })();
+const linFit = (() => { const n=linD.length, sx=linD.reduce((s,p)=>s+p[0],0), sy=linD.reduce((s,p)=>s+p[1],0), sxx=linD.reduce((s,p)=>s+p[0]*p[0],0), sxy=linD.reduce((s,p)=>s+p[0]*p[1],0); const b=(n*sxy-sx*sy)/(n*sxx-sx*sx); return {b, a:(sy-b*sx)/n}; })();
+const linMSE = (a,b) => linD.reduce((s,p)=>s+Math.pow(a+b*p[0]-p[1],2),0)/linD.length;
+const regW = [0.9,-0.7,0.55,0.12,-0.08,0.42,0.05,-0.3,0.09,-0.04];
+const regD = (() => { const r=rng(320), a=[]; for(let i=0;i<16;i++){ const x=0.06+0.88*i/15; a.push([x, 0.25+0.5*x+0.045*gauss(r)]); } return a; })();
+// classifier score distributions for the threshold / ROC scenes: negatives N(.30,.12), positives N(.62,.13), base rate 5 %
+const TPR = th => 1-Phi((th-0.62)/0.13), FPR = th => 1-Phi((th-0.30)/0.12), PREC = th => { const tp=0.05*TPR(th), fp=0.95*FPR(th); return tp+fp>1e-9 ? tp/(tp+fp) : 1; };
+const AUCv = (() => { let a=0; for(let i=0;i<1000;i++){ const t1=1-i/1000, t2=1-(i+1)/1000; a += (FPR(t2)-FPR(t1))*(TPR(t1)+TPR(t2))/2; } return a; })();
+
+/* small plotting helper: a panel with data-space → pixel mapping, y in [0,1] */
+function panel(x0,y0,w,h){ return { X:x=>x0+x*w, Y:y=>y0+h-clamp((y-0.02)/0.96,-0.2,1.2)*h, x0,y0,w,h, frame(al=1){ strokeRect(x0,y0,w,h,COL.rule,al,1.5,6); },
+  curve(fn,col,al=1,lw=3,dash){ c.save(); c.beginPath(); c.rect(x0,y0,w,h); c.clip(); c.globalAlpha*=al; c.strokeStyle=col; c.lineWidth=lw; if(dash) c.setLineDash(dash); c.beginPath(); for(let i=0;i<=160;i++){ const x=i/160, px=x0+x*w, py=this.Y(fn(x)); i?c.lineTo(px,py):c.moveTo(px,py); } c.stroke(); c.restore(); },
+  pts(d,col,al=1,r=5){ d.xs.forEach((x,i)=> dot(this.X(x), this.Y(d.ys[i]), r, col, al)); } }; }
+
+/* ---------- scenes ---------- */
+const S = [];
+
+S.push({ title:'Maths for ML — the visual tour', dur:9,
+  cap:[[0,'Module three: the machinery every model shares.'],[4,'How a model learns, why it fails, how you keep it honest, and how you measure it.']],
+  draw(t){
+    txt('MODULE 3', 640, 250, {size:26, color:COL.acc, align:'center', mono:true, alpha:A(t,0)});
+    txt('Maths for ML', 640, 340, {size:92, weight:700, align:'center', alpha:A(t,.3)});
+    txt('loss  ·  gradient descent  ·  bias–variance  ·  regularisation  ·  validation  ·  metrics', 640, 410, {size:24, color:COL.mut, align:'center', alpha:A(t,1.2)});
+    txt('Revolut · Machine Learning 1 (Basics) · 8 October', 640, 470, {size:20, color:COL.faint, align:'center', alpha:A(t,2)});
+  }});
+
+S.push({ title:'A model is a function with adjustable numbers', dur:25,
+  cap:[[0,'A model is a function with adjustable numbers inside.'],[4,'Features go in: what you know about a customer. A prediction comes out.'],[10,'The adjustable numbers are the parameters, or weights.'],[14,'Training means using past cases, where the answer is known, to find good values for them.'],[20,'Then you apply the model to new cases, where the answer is not known yet.']],
+  draw(t){
+    const bx=(x,w,l1,l2,col,al)=>{ rect(x,140,w,74,COL.panel,al,8); strokeRect(x,140,w,74,col,al,2,8); txt(l1, x+w/2, 172, {size:22, weight:700, align:'center', color:col, alpha:al}); txt(l2, x+w/2, 198, {size:16, align:'center', color:COL.mut, alpha:al}); };
+    bx(80,260,'features  x','limit, age, months late…',COL.acc,A(t,4)); arrow(346,177,416,177,COL.mut,A(t,5));
+    bx(420,300,'model   ŷ = f(x; w)','w = parameters (weights)',COL.yel,A(t,0)); arrow(726,177,796,177,COL.mut,A(t,6));
+    bx(800,300,'prediction  ŷ','P(default) = 0.12',COL.green,A(t,6));
+    const P={x0:110,y0:250,w:600,h:310}, X=x=>P.x0+x*P.w, Y=y=>P.y0+P.h-y*P.h; strokeRect(P.x0,P.y0,P.w,P.h,COL.rule,1,1.5,6);
+    const k=ease(clamp((t-14)/5)), a=lerp(0.5,linFit.a,k), b=lerp(0,linFit.b,k);
+    linD.forEach(p=> dot(X(p[0]),Y(p[1]),5,COL.acc,A(t,2)));
+    line(X(0),Y(a),X(1),Y(a+b),COL.yel,A(t,10),3.5);
+    txt(`ŷ = ${b.toFixed(2)} · x + ${a.toFixed(2)}`, 760, 310, {size:30, mono:true, color:COL.yel, alpha:A(t,10)}); txt('two weights: a slope and an intercept', 760, 344, {size:18, color:COL.mut, alpha:A(t,10.5)});
+    txt('training: find the weights that fit past cases', 760, 400, {size:19, color:COL.mut, alpha:A(t,14)});
+    const n=A(t,20,1); if(n>0){ const xs=0.78, ys=linFit.a+linFit.b*xs; line(X(xs),Y(0),X(xs),Y(ys),COL.green,n,2,[5,5]); line(X(0),Y(ys),X(xs),Y(ys),COL.green,n,2,[5,5]); dot(X(xs),Y(ys),9,COL.green,n); txt('new customer', X(xs), Y(0)+24, {size:16, align:'center', color:COL.green, alpha:n}); txt('inference: apply it to a new case', 760, 460, {size:19, color:COL.green, alpha:n}); }
+    txt('feature x →', P.x0+P.w, P.y0+P.h+24, {size:15, align:'right', color:COL.mut}); txt('target y', P.x0+6, P.y0+20, {size:15, color:COL.mut});
+  }});
+
+S.push({ title:'The loss — one number for "how wrong"', dur:26,
+  cap:[[0,'How do we know which weights are good? We need one number that says how wrong the model is: the loss.'],[7,'For each case, measure the gap between prediction and truth. Square it, and average. That is the mean squared error.'],[14,'A better line, a smaller loss. Training is the search for the smallest.'],[19,'For classification the loss is the log loss. It punishes confident mistakes very heavily.']],
+  draw(t){
+    const P={x0:90,y0:150,w:600,h:400}, X=x=>P.x0+x*P.w, Y=y=>P.y0+P.h-y*P.h; strokeRect(P.x0,P.y0,P.w,P.h,COL.rule,1,1.5,6);
+    const k=ease(clamp((t-14)/4)), a=lerp(0.62,linFit.a,k), b=lerp(-0.15,linFit.b,k), r=A(t,7,1.5);
+    linD.forEach(p=>{ const yh=a+b*p[0]; line(X(p[0]),Y(p[1]),X(p[0]),Y(yh),COL.red,r,2.5); dot(X(p[0]),Y(p[1]),5,COL.acc); });
+    line(X(0),Y(a),X(1),Y(a+b),COL.yel,1,3.5);
+    const X2=760, L=linMSE(a,b);
+    txt('residual = y − ŷ', X2, 190, {size:24, mono:true, color:COL.red, alpha:r});
+    txt('MSE = average of (y − ŷ)²', X2, 240, {size:24, mono:true, alpha:A(t,9)});
+    txt('loss', X2, 310, {size:20, color:COL.mut, alpha:A(t,9)}); txt(L.toFixed(4), X2+70, 316, {size:44, mono:true, weight:700, color: L<0.01?COL.green:COL.red, alpha:A(t,9)});
+    rect(X2,340,360,14,COL.panel,A(t,9),4); rect(X2,340,360*clamp(L/0.09),14, L<0.01?COL.green:COL.red, A(t,9),4);
+    const g=A(t,19,1); if(g>0){ rect(X2-10,400,430,150,COL.panel,g,8); strokeRect(X2-10,400,430,150,COL.rule,g,1.5,8); txt('log loss — cost of being wrong', X2+8, 432, {size:19, color:COL.mut, alpha:g});
+      txt('said 0.60, was wrong', X2+8, 474, {size:20, alpha:g}); txt('0.9', X2+330, 474, {size:24, mono:true, color:COL.yel, alpha:g});
+      txt('said 0.99, was wrong', X2+8, 516, {size:20, alpha:A(t,21)}); txt('4.6', X2+330, 516, {size:24, mono:true, weight:700, color:COL.red, alpha:A(t,21)}); }
+  }});
+
+S.push({ title:'Gradient descent — walking downhill', dur:28,
+  cap:[[0,'Picture the loss as a landscape. Every choice of weights is a place; the loss is the altitude.'],[6,'Gradient descent: look at the slope, take a step downhill. Repeat.'],[12,'The steps get smaller as the ground flattens, until you reach the bottom.'],[17,'The step size is the learning rate. Too large, and you overshoot, further each time.'],[22,'Too small, and training crawls. Neural networks use the same idea on small random batches: stochastic gradient descent.']],
+  draw(t){
+    const x0=110, y0=540, w=720, h=380, Lf = v => 0.12*(v-2)*(v-2)+0.08, X = v => x0+(v+1.6)/7.2*w, Y = l => y0 - clamp(l/1.7,0,1.15)*h;
+    line(x0,y0,x0+w,y0,COL.rule); txt('weight w →', x0+w, y0+28, {size:17, align:'right', color:COL.mut}); txt('loss', x0+4, y0-h-8, {size:17, color:COL.mut});
+    c.save(); c.strokeStyle=COL.ink; c.lineWidth=3.5; c.beginPath(); for(let v=-1.6; v<=5.6; v+=.05){ const px=X(v), py=Y(Lf(v)); v===-1.6?c.moveTo(px,py):c.lineTo(px,py);} c.stroke(); c.restore();
+    line(X(2),y0,X(2),Y(Lf(2)),COL.green,.6,1.5,[4,4]); txt('minimum', X(2), y0+28, {size:16, align:'center', color:COL.green});
+    const path = (eta, w0, n) => { const p=[w0]; for(let i=0;i<n;i++) p.push(p[i]-eta*0.24*(p[i]-2)); return p; };
+    const good=path(1.6,-1.1,9), nG = t<6 ? 1 : Math.min(good.length, 1+Math.floor((t-6)/0.9));
+    const fade = t>17 ? .3 : 1;
+    for(let i=0;i<nG;i++){ if(i) arrow(X(good[i-1]),Y(Lf(good[i-1]))-10,X(good[i]),Y(Lf(good[i]))-10,COL.acc,fade*.8,2); dot(X(good[i]),Y(Lf(good[i])),i===nG-1?11:6,COL.acc,fade); }
+    if(t>17){ const bad=path(9.2,1.3,7), nB=Math.min(bad.length, 1+Math.floor((t-17)/0.7)); for(let i=0;i<nB;i++){ if(i) arrow(X(bad[i-1]),Y(Lf(bad[i-1]))-10,X(clamp(bad[i],-1.5,5.5)),Y(Lf(clamp(bad[i],-1.5,5.5)))-10,COL.red,.9,2); dot(X(clamp(bad[i],-1.5,5.5)),Y(Lf(clamp(bad[i],-1.5,5.5))),i===nB-1?11:6,COL.red); } }
+    const X2=880;
+    txt('w ← w − η · slope', X2, 200, {size:28, mono:true, weight:700, color:COL.acc, alpha:A(t,6)}); txt('η = learning rate (step size)', X2, 234, {size:18, color:COL.mut, alpha:A(t,7)});
+    txt(`step ${nG-1}`, X2, 300, {size:22, mono:true, alpha:A(t,6)*fade}); txt(`loss ${Lf(good[nG-1]).toFixed(3)}`, X2+110, 300, {size:22, mono:true, color:COL.acc, alpha:A(t,6)*fade});
+    txt('η too large → overshoots', X2, 370, {size:21, color:COL.red, weight:600, alpha:A(t,17)});
+    txt('η too small → crawls', X2, 406, {size:21, color:COL.yel, alpha:A(t,22)});
+    txt('SGD: same step, on a random mini-batch', X2, 470, {size:18, color:COL.mut, alpha:A(t,24)});
+  }});
+
+S.push({ title:'Underfitting and overfitting', dur:27,
+  cap:[[0,'The same data, three models.'],[3,'Too simple: a straight line through a curve. It misses the pattern. That is underfitting.'],[9,'Too flexible: it passes through every point, including the noise. That is overfitting.'],[15,'In between: it captures the shape and ignores the noise.'],[19,'Look at the errors. The overfitted model is perfect on the data it trained on, and the worst on new data. That gap is the symptom.']],
+  draw(t){
+    [['under','Underfit','too simple — high bias',COL.yel,3],['good','Good fit','captures the shape',COL.green,15],['over','Overfit','memorises the noise — high variance',COL.red,9]].forEach(([k,l1,l2,col,st],i)=>{
+      const P=panel(70+i*390,150,350,270), a=A(t,st,1); P.frame(); P.curve(tf,COL.faint,.9,2,[5,5]); P.pts(trainD,COL.acc);
+      P.curve(x=>polyval(fits[k],x),col,a,3.5);
+      txt(l1, P.x0+P.w/2, 458, {size:26, weight:700, align:'center', color:col, alpha:a}); txt(l2, P.x0+P.w/2, 484, {size:17, align:'center', color:COL.mut, alpha:a});
+      const e=A(t,19+i*.6,1), fe=fitErr[k]; txt(`train error  ${(fe.tr*1000).toFixed(1)}`, P.x0+40, 528, {size:19, mono:true, alpha:e}); txt(`new data     ${Math.min(fe.te*1000,999).toFixed(1)}`, P.x0+40, 558, {size:19, mono:true, color: k==='good'?COL.green:COL.red, weight:700, alpha:e}); });
+    txt('dashed = the true pattern · dots = training data', 640, 136, {size:15, align:'center', color:COL.faint});
+  }});
+
+S.push({ title:'Bias and variance — retrain eight times', dur:28,
+  cap:[[0,'Why does that happen? Retrain each model on eight different samples of data.'],[6,'The simple model gives almost the same answer every time. Stable, but consistently wrong. That is bias.'],[13,'The flexible model gives a different answer every time. On average it is right, but any single one is far off. That is variance.'],[20,'Error on new data is bias squared, plus variance, plus noise that no model can remove.']],
+  draw(t){
+    const PL=panel(80,150,520,330), PR=panel(680,150,520,330);
+    [[PL,'simple',COL.yel,6,'Simple model','same answer every time, always wrong → BIAS'],[PR,'flex',COL.red,13,'Flexible model','a different answer every time → VARIANCE']].forEach(([P,key,col,st,l1,l2])=>{ P.frame(); P.curve(tf,COL.ink,.9,2.5,[6,5]);
+      const n = t<st-5 ? 0 : Math.min(8, Math.floor((t-(st-5))/0.55)); for(let i=0;i<n;i++) P.curve(x=>polyval(resamp[i][key],x),col,.55,2);
+      txt(l1, P.x0+P.w/2, 520, {size:26, weight:700, align:'center', color:col, alpha:A(t,st-5)}); txt(l2, P.x0+P.w/2, 550, {size:18, align:'center', color:COL.mut, alpha:A(t,st)}); });
+    txt('error on new data  =  bias²  +  variance  +  noise', 640, 588, {size:24, mono:true, align:'center', color:COL.acc, alpha:A(t,20)});
+    txt('dashed = the truth', 640, 136, {size:15, align:'center', color:COL.faint});
+  }});
+
+S.push({ title:'The trade-off — where the best model lives', dur:26,
+  cap:[[0,'Put it on one chart. Left to right, the model gets more complex.'],[5,'Training error only goes down.'],[9,'Error on new data goes down, and then back up.'],[14,'The best model sits at the bottom of that curve, not where training error is lowest.'],[19,'To the left, fix bias: a richer model, better features. To the right, fix variance: more data, a simpler model, regularisation.']],
+  draw(t){
+    const x0=130, y0=530, w=820, h=360, X = d => x0+(d-1)/9*w, Y = e => y0-clamp(e/0.06)*h;
+    line(x0,y0,x0+w,y0,COL.rule); line(x0,y0,x0,y0-h,COL.rule); txt('model complexity →', x0+w, y0+30, {size:18, align:'right', color:COL.mut}); txt('error', x0+6, y0-h-8, {size:18, color:COL.mut});
+    const draw=(key,col,st)=>{ const p=clamp((t-st)/3); c.save(); c.strokeStyle=col; c.lineWidth=4; c.beginPath(); const upto=1+9*p; for(let d=1; d<=upto; d+=.05){ const i=Math.min(8,Math.floor(d-1)), f=d-1-i, e=lerp(curveErr[i][key],curveErr[i+1][key],f); d===1?c.moveTo(X(d),Y(e)):c.lineTo(X(d),Y(e)); } c.stroke(); c.restore(); };
+    if(t>5) draw('tr',COL.acc,5); if(t>9) draw('te',COL.red,9);
+    txt('training error', X(7.2), Y(curveErr[6].tr)+30, {size:19, color:COL.acc, alpha:A(t,6)}); txt('error on new data', X(6.3), Y(Math.min(curveErr[8].te,0.055))-16, {size:19, color:COL.red, alpha:A(t,10)});
+    let best=0; curveErr.forEach((e,i)=>{ if(e.te<curveErr[best].te) best=i; }); const b=A(t,14,1);
+    line(X(best+1),y0,X(best+1),Y(curveErr[best].te),COL.green,b,2.5,[5,5]); dot(X(best+1),Y(curveErr[best].te),10,COL.green,b); txt('best model', X(best+1), y0+30, {size:18, align:'center', color:COL.green, weight:700, alpha:b});
+    const z=A(t,19,1); txt('← UNDERFIT · high bias', x0+10, y0-h+26, {size:19, color:COL.yel, weight:600, alpha:z}); txt('OVERFIT · high variance →', x0+w-10, y0-h+26, {size:19, align:'right', color:COL.red, weight:600, alpha:z});
+    const X2=990; txt('fix bias', X2, 250, {size:21, weight:700, color:COL.yel, alpha:z}); ['richer model','better features','less regularisation'].forEach((s,i)=> txt('· '+s, X2, 280+i*26, {size:18, color:COL.mut, alpha:z}));
+    txt('fix variance', X2, 390, {size:21, weight:700, color:COL.red, alpha:A(t,21)}); ['more data','simpler model','regularisation','ensembles'].forEach((s,i)=> txt('· '+s, X2, 420+i*26, {size:18, color:COL.mut, alpha:A(t,21)}));
+  }});
+
+S.push({ title:'Regularisation — L2 and L1', dur:27,
+  cap:[[0,'Regularisation: add a penalty for large weights, so the model only uses a feature if it earns its place.'],[7,'L two, or ridge, shrinks every weight smoothly towards zero.'],[13,'L one, or lasso, pushes the weak ones to exactly zero. It selects features.'],[19,'You trade a little bias for a lot less variance. The strength, lambda, is chosen on validation data.']],
+  draw(t){
+    txt('loss  =  error on training data  +  λ × (size of the weights)', 640, 150, {size:25, mono:true, align:'center', color:COL.acc, alpha:A(t,0)});
+    const lam2 = 2.2*ease(clamp((t-7)/5)), lam1 = 0.34*ease(clamp((t-13)/5));
+    [['L2 — ridge','λ Σ w²','shrinks all, none to zero', 90, w=>w/(1+lam2), lam2, 7],['L1 — lasso','λ Σ |w|','weak ones become exactly 0', 690, w=>Math.sign(w)*Math.max(Math.abs(w)-lam1,0), lam1*6.5, 13]].forEach(([l1,l2,l3,x0,fn,lam,st])=>{
+      const a=A(t,st-1,1), mid=370, bw=38; txt(l1, x0, 205, {size:26, weight:700, alpha:a}); txt(l2, x0+200, 205, {size:22, mono:true, color:COL.mut, alpha:a});
+      line(x0,mid,x0+500,mid,COL.rule,a);
+      regW.forEach((w0,i)=>{ const w=fn(w0), x=x0+12+i*49, hh=w*150; rect(x, hh>=0?mid-hh:mid, bw, Math.abs(hh), w===0?COL.faint:(w>0?COL.acc:COL.yel), a); strokeRect(x, w0>=0?mid-w0*150:mid, bw, Math.abs(w0*150), COL.faint, a*.5, 1); if(w===0 && lam>0) { dot(x+bw/2, mid, 6, COL.red, a); txt('0', x+bw/2, mid+26, {size:16, align:'center', color:COL.red, weight:700, alpha:a}); } });
+      txt(`λ = ${lam.toFixed(1)}`, x0, 548, {size:22, mono:true, alpha:a}); txt(l3, x0+130, 548, {size:19, color:COL.mut, alpha:A(t,st+3)}); });
+    txt('scale the features first, so the penalty is fair', 640, 588, {size:18, align:'center', color:COL.faint, alpha:A(t,21)});
+  }});
+
+S.push({ title:'Validation — train, validation, test', dur:27,
+  cap:[[0,'To know how a model does on new data, hold some data back.'],[4,'Training data fits the weights. Validation data is for every choice you make. Test data is opened once, at the end.'],[12,'With little data, rotate: five folds, each takes a turn as the validation set, and you average.'],[18,'And when time matters, as in fraud and credit, split by time: train on the past, test on the most recent.']],
+  draw(t){
+    const x0=90, w=1100; const seg=(x,ww,y,hh,col,lab,sub,al)=>{ rect(x,y,ww-4,hh,col,al,6); txt(lab, x+ww/2, y+hh/2+2, {size:20, weight:700, align:'center', color:COL.bg, alpha:al}); if(sub) txt(sub, x+ww/2, y+hh+24, {size:16, align:'center', color:COL.mut, alpha:al}); };
+    seg(x0,w*.7,150,58,COL.acc,'TRAIN  70 %','fit the weights',A(t,4)); seg(x0+w*.7,w*.15,150,58,COL.yel,'VALIDATION','choose · tune · threshold',A(t,6)); seg(x0+w*.85,w*.15,150,58,COL.green,'TEST','once, at the end',A(t,8));
+    const k=A(t,12,1); txt('5-fold cross-validation', x0, 290, {size:20, color:COL.mut, alpha:k}); const cur = t<12 ? -1 : Math.floor((t-12)/1.1)%5;
+    for(let r=0;r<5;r++){ for(let f=0;f<5;f++){ const isV=f===r, live = r<=Math.min(4,Math.floor((t-12)/1.1)); rect(x0+f*96, 304+r*30, 90, 24, isV?COL.yel:COL.acc, k*(live?(isV?1:.75):.15), 4); } txt(`run ${r+1}`, x0+500, 322+r*30, {size:15, color:COL.mut, alpha:k}); }
+    txt('→ average the five scores', x0+580, 380, {size:19, color:COL.yel, alpha:A(t,15)});
+    const tm=A(t,18,1); txt('split by time', x0, 500, {size:20, color:COL.mut, alpha:tm}); ['Jan','Feb','Mar','Apr','May','Jun'].forEach((m,i)=>{ rect(x0+i*130, 514, 124, 44, i<4?COL.acc:i===4?COL.yel:COL.green, tm, 5); txt(m, x0+i*130+62, 543, {size:19, weight:700, align:'center', color:COL.bg, alpha:tm}); });
+    txt('train on the past → test on the most recent', x0+800, 543, {size:18, color:COL.mut, alpha:A(t,20)}); arrow(x0, 574, x0+770, 574, COL.faint, tm, 1.5); txt('time', x0+780, 580, {size:15, color:COL.faint, alpha:tm});
+  }});
+
+S.push({ title:'Leakage — the model that read the answer', dur:26,
+  cap:[[0,'The most common way to fool yourself: leakage.'],[4,'At prediction time you only know the past. Every feature must come from the left of this line.'],[10,'Here is one that does not: it is only recorded after the default. The model learns to read the answer.'],[16,'Offline it looks superb. In production the feature does not exist yet, and the model collapses.'],[21,'When a result looks too good, assume leakage first.']],
+  draw(t){
+    const y=330, xp=640; arrow(80,y,1200,y,COL.faint,1,2); txt('time →', 1200, y+28, {size:16, align:'right', color:COL.faint});
+    const a=A(t,4,1); line(xp,180,xp,480,COL.acc,a,3,[8,6]); txt('prediction time', xp, 166, {size:20, weight:700, align:'center', color:COL.acc, alpha:a});
+    const chip=(x,yy,s,col,al)=>{ c.save(); c.font='400 19px -apple-system,BlinkMacSystemFont,sans-serif'; const ww=c.measureText(s).width+28; c.restore(); rect(x,yy,ww,40,COL.panel,al,20); strokeRect(x,yy,ww,40,col,al,2,20); txt(s, x+14, yy+27, {size:19, color:col, alpha:al}); };
+    chip(110,220,'credit limit',COL.green,A(t,5)); chip(300,250,'repayment history',COL.green,A(t,6)); chip(150,390,'tenure',COL.green,A(t,6.5)); chip(360,410,'past disputes',COL.green,A(t,7));
+    txt('✓ known when you decide', 110, 500, {size:18, color:COL.green, alpha:A(t,7)});
+    dot(900,y,10,COL.red,A(t,9)); txt('default happens', 900, y-22, {size:17, align:'center', color:COL.red, alpha:A(t,9)});
+    chip(930,400,'collections agency assigned',COL.red,A(t,10)); txt('✗ only exists after the outcome', 930, 470, {size:18, color:COL.red, alpha:A(t,11)});
+    const r=A(t,16,1); rect(80,520,520,62,COL.panel,r,8); txt('offline AUC', 100, 558, {size:20, color:COL.mut, alpha:r}); txt('0.99', 230, 562, {size:32, mono:true, weight:700, color:COL.green, alpha:r}); txt('in production', 340, 558, {size:20, color:COL.mut, alpha:A(t,18)}); txt('0.62', 480, 562, {size:32, mono:true, weight:700, color:COL.red, alpha:A(t,18)});
+    txt('too good to be true → suspect leakage', 660, 558, {size:21, color:COL.yel, weight:600, alpha:A(t,21)});
+  }});
+
+S.push({ title:'The confusion matrix — and the accuracy trap', dur:30,
+  cap:[[0,'A thousand customers. Fifty will default. The model flags a hundred.'],[5,'Four boxes. Caught: forty. False alarms: sixty. Missed: ten. Correctly left alone: eight hundred and ninety.'],[13,'Accuracy: ninety-three percent. Sounds excellent.'],[17,'But a model that never flags anyone scores ninety-five. With rare events, accuracy rewards doing nothing.'],[23,'So we ask two sharper questions. Precision: of those flagged, how many were real? Forty percent. Recall: of the real ones, how many did we catch? Eighty percent.']],
+  draw(t){
+    const x0=250, y0=200, cw=220, ch=140;
+    txt('actually default', x0+cw/2, y0-18, {size:18, align:'center', color:COL.mut}); txt('actually fine', x0+cw*1.5, y0-18, {size:18, align:'center', color:COL.mut});
+    txt('flagged', x0-16, y0+ch/2+6, {size:18, align:'right', color:COL.mut}); txt('not flagged', x0-16, y0+ch*1.5+6, {size:18, align:'right', color:COL.mut});
+    [[0,0,'TP','40','caught',COL.green,5],[1,0,'FP','60','false alarm',COL.yel,7],[0,1,'FN','10','missed',COL.red,9],[1,1,'TN','890','left alone',COL.faint,11]].forEach(([cx,cy,k,n,lab,col,st])=>{ const a=A(t,st,.8), x=x0+cx*cw, y=y0+cy*ch; rect(x+3,y+3,cw-6,ch-6,col,a*.28,8); strokeRect(x+3,y+3,cw-6,ch-6,col,a,2,8); txt(k, x+18, y+34, {size:19, mono:true, color:col, alpha:a}); txt(n, x+cw/2, y+ch/2+16, {size:46, weight:700, align:'center', alpha:a}); txt(lab, x+cw/2, y+ch-18, {size:17, align:'center', color:COL.mut, alpha:a}); });
+    const pz=A(t,23,1); if(pz>0){ strokeRect(x0-2,y0-2,cw*2+4,ch+4,COL.acc,pz,3,10); strokeRect(x0-6,y0-6,cw+12,ch*2+12,COL.green,A(t,27),3,12); }
+    const X2=770;
+    txt('accuracy = (40 + 890) / 1,000', X2, 220, {size:20, mono:true, color:COL.mut, alpha:A(t,13)}); txt('93 %', X2, 268, {size:42, mono:true, weight:700, alpha:A(t,13.5)});
+    txt('"never flag anyone":', X2+150, 262, {size:19, color:COL.yel, alpha:A(t,17)}); txt('95 %', X2+340, 266, {size:32, mono:true, weight:700, color:COL.yel, alpha:A(t,17.5)});
+    txt('precision = TP / (TP + FP) = 40 / 100', X2, 370, {size:20, mono:true, color:COL.acc, alpha:pz}); txt('40 %', X2, 414, {size:36, mono:true, weight:700, color:COL.acc, alpha:pz});
+    txt('recall = TP / (TP + FN) = 40 / 50', X2, 474, {size:20, mono:true, color:COL.green, alpha:A(t,27)}); txt('80 %', X2, 518, {size:36, mono:true, weight:700, color:COL.green, alpha:A(t,27)});
+  }});
+
+S.push({ title:'The threshold — one model, many operating points', dur:28,
+  cap:[[0,'A classifier gives each case a score. You choose the threshold above which you flag.'],[6,'Lower the threshold: you catch more of the real ones, and raise more false alarms. Recall up, precision down.'],[14,'Raise it: fewer alarms, more misses.'],[19,'Where to put it is a business decision: what does a miss cost, against a false alarm?']],
+  draw(t){
+    const x0=90, w=720, base=520, X = s => x0+s*w, th = t<6 ? .55 : t<14 ? lerp(.55,.36,ease((t-6)/8)) : t<19 ? lerp(.36,.72,ease((t-14)/5)) : lerp(.72,.5,ease(clamp((t-19)/4)));
+    const dn = s => nd((s-.30)/.12), dp = s => nd((s-.62)/.13)*.55;
+    const fill=(fn,from,to,col,al)=>{ c.save(); c.globalAlpha=al; c.fillStyle=col; c.beginPath(); c.moveTo(X(from),base); for(let s=from;s<=to;s+=.005) c.lineTo(X(s),base-fn(s)*300); c.lineTo(X(to),base); c.fill(); c.restore(); };
+    fill(dn,0,th,COL.faint,.35); fill(dn,th,1,COL.yel,.75); fill(dp,0,th,COL.red,.7); fill(dp,th,1,COL.green,.75);
+    line(x0,base,x0+w,base,COL.rule); [0,.25,.5,.75,1].forEach(s=> txt(s.toFixed(2), X(s), base+26, {size:16, align:'center', color:COL.mut})); txt('model score →', x0+w, base+52, {size:17, align:'right', color:COL.mut});
+    txt('fine customers', X(.2), 190, {size:19, align:'center', color:COL.mut}); txt('defaulters', X(.7), 300, {size:19, align:'center', color:COL.green});
+    line(X(th),150,X(th),base+8,COL.ink,1,3); txt(`threshold ${th.toFixed(2)}`, X(th), 142, {size:19, weight:700, align:'center'});
+    const X2=880, R=TPR(th), P=PREC(th);
+    txt('recall', X2, 220, {size:21, color:COL.green}); rect(X2,232,300,18,COL.panel,1,4); rect(X2,232,300*R,18,COL.green,1,4); txt((R*100).toFixed(0)+' %', X2+310, 248, {size:22, mono:true});
+    txt('precision', X2, 300, {size:21, color:COL.acc}); rect(X2,312,300,18,COL.panel,1,4); rect(X2,312,300*P,18,COL.acc,1,4); txt((P*100).toFixed(0)+' %', X2+310, 328, {size:22, mono:true});
+    txt('caught', X2, 392, {size:17, color:COL.green}); txt('missed', X2+90, 392, {size:17, color:COL.red}); txt('false alarms', X2+180, 392, {size:17, color:COL.yel});
+    txt('cost of a miss  vs.  cost of a false alarm', X2, 460, {size:19, color:COL.yel, alpha:A(t,19)}); txt('→ the threshold is a business decision', X2, 490, {size:18, color:COL.mut, alpha:A(t,21)});
+  }});
+
+S.push({ title:'ROC, AUC and the precision–recall curve', dur:30,
+  cap:[[0,'To compare models without picking a threshold, sweep all of them.'],[5,'The R O C curve: recall against false positive rate. The area under it, A U C, is the chance that a random positive outranks a random negative.'],[14,'One half is a coin flip. One is perfect.'],[18,'When positives are rare, look at the precision recall curve instead. A model can have a superb A U C and still drown you in false alarms.'],[25,'And if you use the probability itself, for pricing, check that it is calibrated.']],
+  draw(t){
+    const sweep = clamp((t-1)/9), thNow = 1 - sweep;
+    const box=(x0,ttl,xl,yl,al)=>{ strokeRect(x0,160,400,380,COL.rule,al,1.5,6); txt(ttl, x0, 146, {size:21, weight:700, alpha:al}); txt(xl, x0+400, 566, {size:16, align:'right', color:COL.mut, alpha:al}); txt(yl, x0+8, 182, {size:16, color:COL.mut, alpha:al}); };
+    const xa=110; box(xa,'ROC curve','false positive rate →','recall',1); line(xa,540,xa+400,160,COL.faint,1,1.5,[5,5]); txt('random', xa+250, 420, {size:15, color:COL.faint});
+    c.save(); c.globalAlpha=.25; c.fillStyle=COL.acc; c.beginPath(); c.moveTo(xa,540); for(let th=1; th>=thNow; th-=.005) c.lineTo(xa+FPR(th)*400, 540-TPR(th)*380); c.lineTo(xa+FPR(thNow)*400,540); c.fill(); c.restore();
+    c.save(); c.strokeStyle=COL.acc; c.lineWidth=4; c.beginPath(); for(let th=1; th>=thNow; th-=.005){ const px=xa+FPR(th)*400, py=540-TPR(th)*380; th===1?c.moveTo(px,py):c.lineTo(px,py);} c.stroke(); c.restore();
+    dot(xa+FPR(thNow)*400, 540-TPR(thNow)*380, 8, COL.yel);
+    txt(`AUC = ${AUCv.toFixed(2)}`, xa+170, 470, {size:30, mono:true, weight:700, color:COL.acc, alpha:A(t,9)}); txt('0.5 = coin flip · 1.0 = perfect', xa+120, 502, {size:16, color:COL.mut, alpha:A(t,14)});
+    const xb=600, a=A(t,18,1); box(xb,'Precision–recall curve','recall →','precision',a); const sw2=clamp((t-18)/5);
+    line(xb,540-.05*380,xb+400,540-.05*380,COL.faint,a,1.5,[5,5]); txt('random = base rate 5 %', xb+30, 540-.05*380-8, {size:15, color:COL.faint, alpha:a});
+    c.save(); c.globalAlpha=a; c.strokeStyle=COL.green; c.lineWidth=4; c.beginPath(); let st=true; for(let th=.98; th>=.98-.96*sw2; th-=.005){ const px=xb+TPR(th)*400, py=540-PREC(th)*380; st?c.moveTo(px,py):c.lineTo(px,py); st=false; } c.stroke(); c.restore();
+    txt(`at 80 % recall:`, xb+30, 440, {size:18, color:COL.green, alpha:A(t,22)}); txt(`precision ${(PREC(0.62-0.8416*0.13)*100).toFixed(0)} %`, xb+30, 468, {size:22, weight:700, color:COL.green, alpha:A(t,22)});
+    const X2=1030; txt('rare positives?', X2, 250, {size:19, color:COL.yel, alpha:a}); txt('→ use PR', X2, 280, {size:22, weight:700, color:COL.yel, alpha:a});
+    txt('calibration:', X2, 400, {size:18, color:COL.mut, alpha:A(t,25)}); txt('"20 %" should', X2, 428, {size:18, alpha:A(t,25)}); txt('happen 20 %', X2, 454, {size:18, alpha:A(t,25)}); txt('of the time', X2, 480, {size:18, alpha:A(t,25)});
+  }});
+
+S.push({ title:'Measuring a regression model', dur:23,
+  cap:[[0,'For a model that predicts a number, measure the size of the errors.'],[4,'Mean absolute error: on average, how far off. Every euro counts the same.'],[9,'Root mean squared error squares the errors first, so large misses dominate.'],[14,'Add one outlier. The absolute error barely moves. The squared error jumps.'],[18,'Choose by what a big miss costs you. And always compare with a baseline: predicting the average for everyone.']],
+  draw(t){
+    const P={x0:90,y0:150,w:600,h:400}, X=x=>P.x0+x*P.w, Y=y=>P.y0+P.h-y*P.h; strokeRect(P.x0,P.y0,P.w,P.h,COL.rule,1,1.5,6);
+    const o=A(t,14,1), pts = regD.map(p=>[...p]); const all = o>0 ? [...pts,[0.55, lerp(0.525,0.97,o)]] : pts;
+    all.forEach((p,i)=>{ const yh=0.25+0.5*p[0], out=i===pts.length; line(X(p[0]),Y(p[1]),X(p[0]),Y(yh),out?COL.red:COL.yel,A(t,2),out?3.5:2); dot(X(p[0]),Y(p[1]),out?8:5,out?COL.red:COL.acc); });
+    line(X(0),Y(.25),X(1),Y(.75),COL.ink,1,3);
+    const errs = all.map(p=>(p[1]-(0.25+0.5*p[0]))*1000), mae = errs.reduce((s,e)=>s+Math.abs(e),0)/errs.length, rmse = Math.sqrt(errs.reduce((s,e)=>s+e*e,0)/errs.length);
+    const X2=760;
+    txt('MAE = mean |y − ŷ|', X2, 200, {size:22, mono:true, color:COL.mut, alpha:A(t,4)}); txt('€'+mae.toFixed(0), X2, 252, {size:44, mono:true, weight:700, color:COL.green, alpha:A(t,4.5)});
+    txt('RMSE = √ mean (y − ŷ)²', X2, 320, {size:22, mono:true, color:COL.mut, alpha:A(t,9)}); txt('€'+rmse.toFixed(0), X2, 372, {size:44, mono:true, weight:700, color: o>0.5?COL.red:COL.ink, alpha:A(t,9.5)});
+    txt('one outlier', X(0.55)+14, Y(0.95), {size:18, color:COL.red, alpha:o});
+    txt('R² = share of variance explained', X2, 446, {size:19, color:COL.mut, alpha:A(t,18)}); txt('vs. predicting the mean for everyone', X2, 474, {size:19, color:COL.mut, alpha:A(t,18)});
+    txt('baseline first', X2, 530, {size:22, color:COL.yel, weight:600, alpha:A(t,20)});
+  }});
+
+S.push({ title:'Seven sentences to keep', dur:22,
+  cap:[[0,'Seven sentences to keep.'],[2,'A model is a function; training finds the weights that minimise a loss.'],[7,'Too simple underfits, too flexible overfits. The gap between training and new data is the symptom.'],[13,'Hold data back, split by time, and distrust anything too good.'],[18,'And with rare events, never accuracy: precision, recall, and where you put the threshold.']],
+  draw(t){
+    const L=['Model = function with weights. Training = minimise a loss, by gradient descent.','error = bias² + variance + noise. Complexity trades one for the other.','Underfit: both errors high. Overfit: train low, new data high.','Regularisation buys less variance for a little bias. L2 shrinks, L1 selects.','Train to fit · validation to choose · test once. Split by time and customer.','Leakage: a feature you would not have at prediction time.','Rare events: precision, recall, PR-AUC — and the threshold is a cost decision.'];
+    L.forEach((s,i)=>{ const a=A(t,1+i*2.2,.8); dot(96, 168+i*60, 7, COL.acc, a); wrap(s, 126, 177+i*60, 1060, 28, {size:24, alpha:a}); });
+  }});
+
+/* ---------- timeline ---------- */
+// Every caption gets at least the time needed to read / speak it; the animation inside a caption stretches to fit.
+S.forEach(s => { let tau=0; s.segs = s.cap.map((cp,k) => { const o0=cp[0], o1 = k+1<s.cap.length ? s.cap[k+1][0] : s.dur, L=o1-o0, words=cp[1].split(/\s+/).length, R=Math.max(L, words/2.25+1.3); const g={o0,L,R,tau,words}; tau+=R; return g; }); s.len=tau; });
+let off=0; S.forEach((s,i)=>{ s.start=off; s.i=i; off+=s.len; }); const TOTAL=off;
+function locate(T){ const s=sceneAt(T), tau=T-s.start; let k=0; for(let i=0;i<s.segs.length;i++) if(tau>=s.segs[i].tau) k=i; const g=s.segs[k]; return { s, k, t: g.o0 + clamp((tau-g.tau)/g.R)*g.L, segStart: s.start+g.tau, segEnd: s.start+g.tau+g.R, words:g.words }; }
+const sceneAt = T => { for(let i=S.length-1;i>=0;i--) if(T>=S[i].start) return S[i]; return S[0]; };
+
+/* ---------- audio (WebAudio) ---------- */
+let AC=null, master=null;
+function audioInit(){ if(AC) return; AC = new (window.AudioContext||window.webkitAudioContext)(); master = AC.createGain(); master.gain.value=.5; master.connect(AC.destination); }
+function tone(freq, dur=.18, type='sine', vol=.18, when=0){ if(!AC || !document.getElementById('snd').checked) return; const o=AC.createOscillator(), g=AC.createGain(), t0=AC.currentTime+when; o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(vol,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+dur); o.connect(g); g.connect(master); o.start(t0); o.stop(t0+dur+.02); }
+const chime = () => { tone(523.25,.5,'sine',.14); tone(659.25,.5,'sine',.11,.07); tone(783.99,.7,'sine',.09,.14); };
+const blip = () => tone(880,.09,'triangle',.07);
+
+/* ---------- voice-over (Web Speech) ---------- */
+// Only English voices are offered; the system default (often the OS language) is never used.
+const NOVELTY = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i;
+const PREFER = [/Google UK English Male/i, /Google UK English Female/i, /Daniel.*(Enhanced|Premium)/i, /Serena/i, /Kate/i, /Oliver/i, /^Daniel/i, /Arthur/i, /Martha/i, /Microsoft (Ryan|Sonia|Libby)/i, /Google US English/i, /Samantha.*(Enhanced|Premium)/i, /^Samantha/i, /Ava/i, /Alex/i, /Karen/i, /Moira/i];
+let VOICES = [];
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  const all = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name));
+  const rank = v => { const i = PREFER.findIndex(r => r.test(v.name)); return (i<0 ? 100 : i) + (/en[-_]GB/i.test(v.lang) ? 0 : 0.5); };
+  VOICES = all.sort((a,b) => rank(a)-rank(b));
+  const sel = document.getElementById('voicesel'); let saved = null; try { saved = localStorage.getItem('m1voice'); } catch(e) {}
+  sel.innerHTML = VOICES.length ? '' : '<option>no English voice installed</option>';
+  VOICES.forEach((v,i) => { const o=document.createElement('option'); o.value=v.name; o.textContent=`${v.name} (${v.lang})`; if(saved ? v.name===saved : i===0) o.selected=true; sel.appendChild(o); });
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+document.getElementById('voicesel').addEventListener('change', e => { try { localStorage.setItem('m1voice', e.target.value); } catch(err) {} speakNow('This is the voice you selected.'); });
+let speaking=false, speakUid=0, speakT0=0, speakMax=0;
+function speakNow(s){ if(!('speechSynthesis' in window)) return; if(!VOICES.length) loadVoices(); const v = VOICES.find(v => v.name===document.getElementById('voicesel').value) || VOICES[0]; if(!v) return;   // never fall back to a non-English default
+  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.voice=v; u.lang=v.lang; const sp=parseFloat(document.getElementById('speed').value); u.rate = 0.98*sp; u.pitch=1;
+  const id=++speakUid; speaking=true; speakT0=performance.now(); speakMax=(s.split(/\s+/).length/1.5+6)*1000/sp; u.onend = u.onerror = () => { if(id===speakUid) speaking=false; }; speechSynthesis.speak(u); }
+function stopSpeech(){ speakUid++; speaking=false; if('speechSynthesis' in window) speechSynthesis.cancel(); }
+function speak(s){ if(document.getElementById('voice').checked) speakNow(s); }
+document.getElementById('voice').addEventListener('change', e => { if(!e.target.checked) stopSpeech(); });
+
+/* ---------- render ---------- */
+let T=0, playing=false, last=0, prevScene=-1, prevCap=-1;
+function render(){
+  const loc=locate(T), s=loc.s, t=loc.t, k=loc.k;
+  c.setTransform(1,0,0,1,0,0); c.globalAlpha=1; c.fillStyle=COL.bg; c.fillRect(0,0,W,H);
+  if(s.i>0){ txt(`MODULE 3 · MATHS FOR ML · ${s.i}/${S.length-1}`, 70, 52, {size:15, mono:true, color:COL.acc}); txt(s.title, 70, 96, {size:36, weight:700}); }
+  c.save(); c.globalAlpha = Math.min(A(t,0,.4), 1 - A(t, s.dur-.35, .35)*.0); s.draw(t); c.restore();
+  const cap=s.cap[k][1], ca=ease(clamp((T-loc.segStart)/.35));
+  rect(60, 606, 1160, 92, COL.panel, .96, 10); strokeRect(60,606,1160,92,COL.rule,1,1,10);
+  { const F='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; const split=(size,maxW)=>{ c.save(); c.font=`400 ${size}px ${F}`; const out=[]; let l=''; for(const w of cap.split(' ')){ const n=l?l+' '+w:w; if(c.measureText(n).width>maxW && l){ out.push(l); l=w; } else l=n; } if(l) out.push(l); c.restore(); return out; };
+    let size=25, lines=split(25,1090); if(lines.length>2){ size=21; lines=split(21,1110); } if(lines.length>3){ size=18; lines=split(18,1120); }
+    const lh=size+7, y0=652 - (lines.length-1)*lh/2 + size*.35; c.save(); c.globalAlpha=ca; lines.forEach((l,i)=> txt(l, 640, y0+i*lh, {size, align:'center'})); c.restore(); }
+  if(playing){ if(s.i!==prevScene){ chime(); } if(s.i!==prevScene || k!==prevCap){ if(s.i===prevScene) blip(); speak(cap); } }
+  prevScene=s.i; prevCap=k;
+  document.getElementById('fill').style.width = (T/TOTAL*100)+'%';
+  const mm = x => `${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`; document.getElementById('time').textContent = `${mm(T)} / ${mm(TOTAL)}`;
+  document.querySelectorAll('#scenes button').forEach((b,i)=> b.classList.toggle('on', i===s.i));
+}
+function frame(now){ if(playing){ const dt=Math.min((now-last)/1000,.1); last=now; let nt = T + dt*parseFloat(document.getElementById('speed').value);
+  if(speaking && now-speakT0 > speakMax) speaking=false;                      // safety net if the browser never fires 'end'
+  if(speaking && document.getElementById('voice').checked){ const e=locate(T).segEnd; if(nt >= e-.03) nt = Math.max(T, e-.03); }   // hold on the last frame until the sentence is finished
+  T = nt; if(T>=TOTAL){ T=TOTAL-.01; setPlay(false); } render(); requestAnimationFrame(frame); } }
+function setPlay(p){ playing=p; document.getElementById('play').textContent = p?'❚❚ Pause':'▶ Play'; if(p){ audioInit(); if(AC.state==='suspended') AC.resume(); if(T>=TOTAL-.05) T=0; prevScene=-1; prevCap=-1; last=performance.now(); requestAnimationFrame(frame); } else stopSpeech(); }
+function seek(x){ T=clamp(x,0,TOTAL-.01); prevScene=-1; prevCap=-1; stopSpeech(); render(); }
+
+/* ---------- UI ---------- */
+const track=document.getElementById('track'); S.forEach(s=>{ if(s.i){ const d=document.createElement('div'); d.className='tick'; d.style.left=(s.start/TOTAL*100)+'%'; track.appendChild(d); } });
+track.addEventListener('click', e=>{ const r=track.getBoundingClientRect(); seek((e.clientX-r.left)/r.width*TOTAL); });
+const sc=document.getElementById('scenes'); S.forEach(s=>{ const b=document.createElement('button'); b.textContent = s.i===0 ? 'Intro' : `${s.i} · ${s.title.split(' — ')[0]}`; b.onclick=()=>seek(s.start); sc.appendChild(b); });
+document.getElementById('play').onclick=()=>setPlay(!playing); cv.onclick=()=>setPlay(!playing);
+document.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); setPlay(!playing); } const s=sceneAt(T); if(e.code==='ArrowRight') seek(S[Math.min(s.i+1,S.length-1)].start); if(e.code==='ArrowLeft') seek(S[Math.max(s.i-(T-s.start<1.5?1:0),0)].start); });
+window.__seek = seek; window.__total = TOTAL; window.__scenes = S.map(s=>({i:s.i,start:s.start,dur:s.len,title:s.title,segs:s.segs.map(g=>g.tau)}));
+render();
+})();
+</script>
+</body>
+</html>

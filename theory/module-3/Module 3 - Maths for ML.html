@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Module 3 — Maths for ML</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+</style>
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EDEF;
+    --ink: #131A1F;
+    --ink-muted: #55646D;
+    --ink-faint: #82949E;
+    --rule: #D5DFE3;
+    --rule-strong: #B3C2C9;
+    --accent: #2B3FA8;
+    --accent-soft: #E6E9F7;
+    --on-accent: #FFFFFF;
+    --good: #1F6B4E;
+    --good-soft: #E2F0E9;
+    --bad: #9E3628;
+    --bad-soft: #F7E7E4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1417;
+      --surface: #151D21;
+      --surface-2: #1B252A;
+      --ink: #E6EDF0;
+      --ink-muted: #9AA9B1;
+      --ink-faint: #74858D;
+      --rule: #232F35;
+      --rule-strong: #35454C;
+      --accent: #7DBDD6;
+      --accent-soft: #16282F;
+      --on-accent: #0E1417;
+      --good: #74C7A0;
+      --good-soft: #132521;
+      --bad: #E4907E;
+      --bad-soft: #2A1A17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1417;
+    --surface: #151D21;
+    --surface-2: #1B252A;
+    --ink: #E6EDF0;
+    --ink-muted: #9AA9B1;
+    --ink-faint: #74858D;
+    --rule: #232F35;
+    --rule-strong: #35454C;
+    --accent: #7DBDD6;
+    --accent-soft: #16282F;
+    --on-accent: #0E1417;
+    --good: #74C7A0;
+    --good-soft: #132521;
+    --bad: #E4907E;
+    --bad-soft: #2A1A17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 1.15rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  p { margin: 0 0 0.8em; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 3rem 0 1.5rem;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 5.5vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- objective banner ---------- */
+
+  .objective {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 1.35rem 1.4rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .objective .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .objective p { font-size: 1.05rem; line-height: 1.45; font-weight: 600; }
+  .objective .small { font-size: 0.88rem; font-weight: 400; opacity: 0.92; margin-top: 0.6rem; }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 2.75rem; }
+
+  h2 {
+    font-size: 1.18rem;
+    letter-spacing: -0.012em;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  h2 .n {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--ink-muted); font-size: 0.93rem; margin: 0.9rem 0 0; }
+
+  /* ---------- cards ---------- */
+
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .q .ask {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 0.55rem;
+    line-height: 1.35;
+  }
+
+  .q .real {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+    text-transform: none;
+  }
+  .q .real b {
+    display: block;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.28rem;
+    font-weight: 600;
+  }
+
+  .say {
+    background: var(--good-soft);
+    border-left: 2px solid var(--good);
+    padding: 0.85rem 1rem;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+  }
+  .say em { color: var(--ink-muted); font-style: italic; }
+
+  .trap {
+    font-size: 0.86rem;
+    color: var(--bad);
+    line-height: 1.5;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .trap b {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    flex: none;
+    padding-top: 0.24em;
+  }
+
+  ul.tight { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.35rem; font-size: 0.94rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  /* ---------- callout ---------- */
+
+  .call {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 1.1rem 1.25rem;
+    margin: 1.15rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+  .call .lab {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .call b { color: var(--ink); }
+
+  /* ---------- never list ---------- */
+
+  .never {
+    background: var(--bad-soft);
+    border: 1px solid var(--bad);
+    padding: 1.15rem 1.3rem;
+    margin-top: 1rem;
+  }
+  .never ol { margin: 0; padding-left: 1.2rem; }
+  .never li {
+    margin-bottom: 0.55rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .never li:last-child { margin-bottom: 0; }
+  .never li b { color: var(--bad); }
+
+  /* ---------- pitch ---------- */
+
+  .pitch {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    padding: 1.3rem 1.4rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  .pitch .beat {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin: 1.1rem 0 0.35rem;
+    font-weight: 600;
+  }
+  .pitch .beat:first-child { margin-top: 0; }
+
+  /* ---------- checklist ---------- */
+
+  .checks { margin-top: 1rem; border-top: 1px solid var(--rule); }
+  .check {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .check .box {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--rule-strong);
+    margin-top: 0.24em;
+  }
+  .check .txt { font-size: 0.94rem; line-height: 1.5; color: var(--ink-muted); }
+  .check .txt b { color: var(--ink); }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--rule-strong);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+
+<style>
+  /* ---------- print ---------- */
+  @page { size: A4; margin: 13mm 13mm 15mm; }
+
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.4pt;
+      line-height: 1.45;
+    }
+    body { padding: 0; }
+    .wrap { max-width: none; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .masthead { padding: 0 0 0.7rem; }
+    h1 { font-size: 22pt; }
+    .sub { font-size: 9.5pt; }
+    .objective { margin-top: 0.9rem; padding: 0.85rem 1rem; }
+    .objective p { font-size: 11pt; }
+    .objective .small { font-size: 9pt; }
+
+    section { padding-top: 1.25rem; }
+    h2 { font-size: 12.5pt; break-after: avoid; page-break-after: avoid; }
+    .lede { font-size: 9.2pt; margin-top: 0.5rem; }
+
+    .q, .never, .call, .objective {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* prosa: puede partirse entre páginas sin romper la lectura */
+    .pitch, .checks { break-inside: auto; page-break-inside: auto; }
+    .pitch .beat { break-after: avoid; page-break-after: avoid; }
+    .check { break-inside: avoid; page-break-inside: avoid; }
+
+    .q { padding: 0.8rem 0.9rem 0.85rem; margin-top: 0.65rem; }
+    .q .ask { font-size: 10.6pt; }
+    .q .real { font-size: 7.6pt; }
+    .say { font-size: 9.4pt; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+    .trap { font-size: 8.6pt; }
+    .pitch { font-size: 10pt; padding: 0.9rem 1rem; }
+    ul.tight li, .never li, .check .txt { font-size: 9.4pt; }
+
+    .colophon { margin-top: 1.6rem; font-size: 8pt; }
+  }
+</style>
+</head>
+<style>
+  /* ---------- fit matrix (nuevo en esta hoja) ---------- */
+  .fit { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .fit th, .fit td { text-align: left; vertical-align: top; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .fit th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); }
+  .fit td.st { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; font-weight: 600; }
+  .ok { color: var(--good); } .mid { color: #9A6B12; } .no { color: var(--bad); }
+  .fit td.req { font-weight: 600; width: 27%; }
+  .fit td.ev { color: var(--ink-muted); }
+  .fit td.ev b { color: var(--ink); }
+  .en { font-style: normal; }
+  .say .es { display: block; margin-top: 0.55rem; font-size: 0.82rem; color: var(--ink-muted); font-style: italic; }
+  .facts { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .facts li { display: flex; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  .facts li b { flex: none; width: 9.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent); padding-top: 0.2em; }
+  .facts li span { color: var(--ink-muted); }
+  @media print {
+    .fit { font-size: 8.6pt; } .fit td.st { font-size: 7.4pt; }
+    .fit tr { break-inside: avoid; page-break-inside: avoid; }
+    .facts li { font-size: 9pt; break-inside: avoid; }
+    .say .es { font-size: 8.2pt; }
+  }
+</style>
+<style>
+  .f { font-family: var(--mono); font-size: 0.9em; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 3px; white-space: nowrap; }
+  .fx { font-family: var(--mono); font-size: 0.88rem; background: var(--surface-2); padding: 0.7rem 0.9rem; margin: 0.6rem 0; line-height: 1.6; overflow-x: auto; }
+  .ex { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--good); padding: 0.9rem 1.1rem; margin: 0.8rem 0; font-size: 0.94rem; }
+  .ex .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--good); display: block; margin-bottom: 0.35rem; font-weight: 600; }
+  .drill { background: var(--accent-soft); border: 1px solid var(--rule-strong); padding: 0.9rem 1.1rem; margin: 1rem 0; font-size: 0.94rem; }
+  .drill .lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.4rem; font-weight: 600; }
+  .drill ol { margin: 0; padding-left: 1.2rem; } .drill li { margin-bottom: 0.4rem; }
+  .ans { color: var(--ink-muted); font-size: 0.9rem; }
+  .ans li { margin-bottom: 0.45rem; }
+  table.t { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+  table.t th, table.t td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h3 { font-size: 1.02rem; margin: 1.6rem 0 0.4rem; }
+  h4 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; color: var(--ink); }
+  .say30 { border-left: 3px solid var(--accent); padding: 0.5rem 0.9rem; margin: 0.6rem 0; font-size: 0.92rem; background: var(--surface); }
+  .say30 b { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .part { margin-top: 3rem; padding: 1rem 1.2rem; background: var(--accent); color: var(--on-accent); }
+  .part .k { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; display: block; }
+  .part h2 { border: 0; margin: 0.2rem 0 0; padding: 0; color: var(--on-accent); font-size: 1.4rem; }
+  .part p { margin: 0.4rem 0 0; font-size: 0.92rem; opacity: 0.95; }
+  @media print { .fx { font-size: 8.4pt; } .ex, .drill, .say30 { break-inside: avoid; } h3, h4 { break-after: avoid; } .part { break-before: page; } }
+</style>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Revolut · Machine Learning 1 (Basics) · 8 October 2026 · Module 3 of 4</p>
+    <h1>Module 3 — Maths for ML</h1>
+    <p class="sub">Revolut's topic 1 asks for "concepts like <b>bias and variance</b>". This module is the machinery every model shares, whatever its name: what a model is, how it learns (loss, gradient descent), why it fails (under- and overfitting — the bias–variance trade-off), how you keep it honest (validation, leakage), and how you measure it (the metrics). Module 4 then walks through the individual models — and each one will be "this machinery, with a different shape".</p>
+  </header>
+
+  <div class="objective">
+    <span class="lab">The one idea of this module</span>
+    <p>A model is judged on data it has never seen. Everything here — the split, the regularisation, the metrics — exists to answer one question honestly: <em>how well will this work on tomorrow's customers?</em></p>
+    <p class="small">Modules 1–2 gave you the pieces: a model's output is a conditional probability (M1); bias and variance are the two kinds of error (M2); a test set is a sample, so its metrics have confidence intervals (M2). This module assembles them.</p>
+  </div>
+
+  <!-- C1 -->
+  <section>
+    <h2><span class="n">C1</span>What a model is</h2>
+    <p>A <b>model</b> is a function with adjustable numbers inside: <span class="f">ŷ = f(x; w)</span>. You feed it <b>features</b> x (what you know about a case), it returns a <b>prediction</b> ŷ of the <b>target</b> y (what you want to know). The adjustable numbers w are the <b>parameters</b> (weights). <b>Training</b> = using past cases where y is known to find good values of w.</p>
+    <table class="t">
+      <thead><tr><th>Term</th><th>Meaning</th><th>Credit-default example</th></tr></thead>
+      <tbody>
+        <tr><td>Features (x)</td><td>inputs known at decision time</td><td>credit limit, age, last 6 months of repayment status</td></tr>
+        <tr><td>Target / label (y)</td><td>what you predict</td><td>defaulted next month: 1 / 0</td></tr>
+        <tr><td>Parameters (w)</td><td>learned from data</td><td>the weight on "months late"</td></tr>
+        <tr><td>Hyperparameters</td><td>chosen by you, before training</td><td>how deep a tree may grow; the strength of regularisation</td></tr>
+        <tr><td>Training / inference</td><td>learning w from history / applying the model to a new case</td><td>fit on last year's loans / score today's applicant</td></tr>
+      </tbody>
+    </table>
+    <h3>The types of learning</h3>
+    <ul class="tight">
+      <li><b>Supervised</b> — you have labels. <b>Regression</b>: the target is a number (LTV, amount, days to repay). <b>Classification</b>: the target is a category (fraud / not; default / not). Most business ML is supervised classification.</li>
+      <li><b>Unsupervised</b> — no labels; find structure. <b>Clustering</b> (customer segments), <b>dimensionality reduction</b>, <b>anomaly detection</b>.</li>
+      <li><b>Self-supervised</b> — the data labels itself: hide part of the input and predict it. That is how language models and <b>PRAGMA</b> are pre-trained (mask events in a customer's history, learn to reconstruct them).</li>
+      <li><b>Reinforcement learning</b> — learn by acting and receiving rewards. One line is enough.</li>
+    </ul>
+    <div class="say30"><b>30 seconds — "what is supervised machine learning?"</b>"Learning a function from examples where the answer is known. I have historical cases with features — what I knew at the time — and a label — what happened. Training finds the parameters that make the model's predictions match the labels as closely as possible, and then I apply it to new cases where the label isn't known yet. If the label is a number it's regression; if it's a category, like default or no default, it's classification. Without labels it's unsupervised learning — clustering, for instance."</div>
+    <div class="drill"><span class="lab">Exercises C1</span><ol>
+      <li>Regression, classification, or unsupervised? (a) Predict how much a customer will spend next month. (b) Group merchants by behaviour with no predefined categories. (c) Decide whether a login is an account takeover. (d) Predict which of five products a customer buys next.</li>
+      <li>For a "will this dispute be resolved in the customer's favour?" model, name three plausible features and the target. Name one feature that would be tempting but invalid, and why.</li>
+      <li>Parameter or hyperparameter: the weights of a logistic regression; the number of trees in a forest; the learning rate; the split thresholds inside a tree.</li>
+    </ol></div>
+  </section>
+
+  <!-- C2 -->
+  <section>
+    <h2><span class="n">C2</span>How a model learns: loss and gradient descent</h2>
+    <h3>The loss — one number that says how wrong the model is</h3>
+    <table class="t">
+      <thead><tr><th>Loss</th><th>Formula</th><th>Used for</th><th>Character</th></tr></thead>
+      <tbody>
+        <tr><td><b>MSE</b> — mean squared error</td><td><span class="f">(1/n) Σ (y − ŷ)²</span></td><td>regression</td><td>punishes big errors heavily (squared) → sensitive to outliers; predicts the <em>mean</em></td></tr>
+        <tr><td><b>MAE</b> — mean absolute error</td><td><span class="f">(1/n) Σ |y − ŷ|</span></td><td>regression</td><td>every euro of error counts the same → robust to outliers; predicts the <em>median</em></td></tr>
+        <tr><td><b>Log loss</b> (cross-entropy)</td><td><span class="f">−(1/n) Σ [ y log ŷ + (1 − y) log(1 − ŷ) ]</span></td><td>classification</td><td>punishes confident wrong answers enormously: saying 1 % when it happens costs log(0.01)</td></tr>
+      </tbody>
+    </table>
+    <p>Log loss is the multiplication rule from Module 1 in disguise: the probability the model assigns to all the observed outcomes is a product; take the log and it becomes a sum; minimise the negative. That's <b>maximum likelihood</b> (Module 2).</p>
+
+    <h3>Training = finding the weights that minimise the loss</h3>
+    <p>Picture the loss as a landscape: every choice of weights is a location, the loss is the altitude. Training walks downhill.</p>
+    <div class="fx">repeat:   w  ←  w − η · (slope of the loss at w)          η = learning rate</div>
+    <ul class="tight">
+      <li>The <b>gradient</b> is the slope: which direction makes the loss go up fastest. Step the other way.</li>
+      <li>The <b>learning rate</b> η is the step size. Too small: training crawls. Too large: it overshoots and bounces or diverges.</li>
+      <li><b>Stochastic gradient descent (SGD):</b> compute the slope on a small random batch instead of all the data — noisier steps, but far cheaper; it's how neural networks train. <b>Adam</b> is SGD with an automatically adapted step size.</li>
+      <li>An <b>epoch</b> is one pass through the training data.</li>
+      <li>Linear regression has a closed-form solution (the "normal equation") — no iterations needed — but gradient descent scales better to huge data. Trees don't use gradient descent at all; they search for the best splits.</li>
+    </ul>
+    <div class="say30"><b>30 seconds — "what is gradient descent?"</b>"It's how most models are trained. I define a loss — a number measuring how wrong the predictions are — and I want the weights that minimise it. Gradient descent starts from some weights, computes the slope of the loss, and takes a small step downhill; then repeats. The step size is the learning rate: too small and it's slow, too large and it overshoots. Stochastic gradient descent does the same on small random batches of data, which is noisier but much cheaper, and it's what neural networks use."</div>
+    <div class="drill"><span class="lab">Exercises C2</span><ol>
+      <li>Predictions of 10, 20, 30 against actuals of 12, 20, 60. Compute MAE and MSE. Which error dominates the MSE?</li>
+      <li>You predict "time to resolve a dispute". Most take 2 days; a few take 90. Would a model trained with MSE or MAE give the more typical prediction? Why?</li>
+      <li>A classifier says 0.99 for a case that turns out negative. Why does log loss punish that more than saying 0.6?</li>
+      <li>Training loss goes down, then explodes to infinity. Most likely cause?</li>
+    </ol></div>
+  </section>
+
+  <!-- C3 -->
+  <section>
+    <h2><span class="n">C3</span>Underfitting, overfitting, and the bias–variance trade-off</h2>
+    <p class="lede">This is the concept they named. It is Module 2's dartboard, applied to models.</p>
+    <table class="t">
+      <thead><tr><th></th><th>Underfitting — high bias</th><th>Overfitting — high variance</th></tr></thead>
+      <tbody>
+        <tr><td><b>What it is</b></td><td>model too simple to capture the pattern</td><td>model so flexible it memorises the noise in the training data</td></tr>
+        <tr><td><b>Picture</b></td><td>a straight line through a curve</td><td>a wiggly line through every point</td></tr>
+        <tr><td><b>Train error</b></td><td>high</td><td>very low</td></tr>
+        <tr><td><b>Test error</b></td><td>high (about the same as train)</td><td>much higher than train — the <b>gap</b> is the symptom</td></tr>
+        <tr><td><b>If you retrain on new data</b></td><td>you get nearly the same (wrong) model</td><td>you get a very different model each time</td></tr>
+        <tr><td><b>Fix</b></td><td>more complex model · better features · less regularisation</td><td>more data · simpler model · regularisation · fewer features · ensembling (bagging) · early stopping</td></tr>
+      </tbody>
+    </table>
+    <div class="fx">expected test error  =  bias²  +  variance  +  irreducible noise</div>
+    <ul class="tight">
+      <li><b>Bias</b>: error from wrong assumptions — the model can't represent the truth. <b>Variance</b>: error from sensitivity to the particular training sample. <b>Noise</b>: randomness in the outcome itself that no model can remove (two identical customers, one defaults and one doesn't).</li>
+      <li><b>The trade-off:</b> as you make a model more complex, bias falls and variance rises. Test error is U-shaped; the best model is at the bottom of the U, not at the lowest training error.</li>
+      <li><b>More data</b> lowers variance (the flexible model has less room to chase noise) but does nothing for bias. Same statement as in Module 2.</li>
+    </ul>
+    <h3>How you diagnose it in practice</h3>
+    <ul class="tight">
+      <li><b>Train vs. validation error.</b> Both high → underfitting. Train low, validation high → overfitting.</li>
+      <li><b>Learning curves</b> (error vs. amount of training data). If the two curves have converged at a high error, more data won't help — you need a better model or features. If there's still a gap, more data will.</li>
+    </ul>
+    <div class="ex"><span class="lab">Revolut</span>A fraud model shows AUC 0.99 on training data and 0.81 on last month's transactions. That gap is overfitting (or leakage — C5). A simpler model that scores 0.86 on both is the better model, even though its training number looks worse.</div>
+    <div class="say30"><b>30 seconds — "explain the bias–variance trade-off"</b>"A model's error on new data has three parts: bias, variance and irreducible noise. Bias is error from the model being too simple — a straight line fitted to a curve; it underfits, and train and test errors are both high. Variance is error from the model being too flexible — it memorises noise in the training sample, so it does brilliantly on training data and much worse on new data; that gap is overfitting. Making a model more complex lowers bias and raises variance, so test error is U-shaped and I look for the bottom. To reduce variance: more data, regularisation, a simpler model or an ensemble. To reduce bias: a richer model or better features."</div>
+    <div class="drill"><span class="lab">Exercises C3</span><ol>
+      <li>Train accuracy 99 %, validation 78 %. Diagnosis? Three things you'd try.</li>
+      <li>Train accuracy 71 %, validation 70 %, and the business needs 85 %. Diagnosis? Will collecting ten times more data help?</li>
+      <li>You train the same deep tree on five different months of data and get five very different sets of rules. Which error is that, and what's the standard cure?</li>
+      <li>Why can't any model reach zero error on "will this customer default"? Which term of the decomposition is that?</li>
+      <li>In one sentence each: how does more data affect bias? variance?</li>
+    </ol></div>
+  </section>
+
+  <!-- C4 -->
+  <section>
+    <h2><span class="n">C4</span>Regularisation — paying a little bias to buy a lot less variance</h2>
+    <p>Regularisation adds a penalty for complexity to the loss, so the model prefers simple explanations unless the data insists:</p>
+    <div class="fx">loss  =  error on the training data  +  λ × (size of the weights)</div>
+    <table class="t">
+      <thead><tr><th></th><th>L2 — Ridge</th><th>L1 — Lasso</th></tr></thead>
+      <tbody>
+        <tr><td>Penalty</td><td><span class="f">λ Σ wᵢ²</span></td><td><span class="f">λ Σ |wᵢ|</span></td></tr>
+        <tr><td>Effect on weights</td><td>shrinks all of them towards zero, smoothly; none become exactly zero</td><td>pushes some weights to <b>exactly zero</b></td></tr>
+        <tr><td>Use it for</td><td>many correlated features; general stability</td><td><b>feature selection</b> — a sparse, interpretable model</td></tr>
+        <tr><td>Both together</td><td colspan="2"><b>Elastic net</b>: λ₁ Σ|w| + λ₂ Σ w²</td></tr>
+      </tbody>
+    </table>
+    <ul class="tight">
+      <li><b>λ</b> is a hyperparameter: 0 = no regularisation (may overfit); very large = all weights near zero (underfits). You choose it by validation (C5).</li>
+      <li><b>Scale the features first.</b> The penalty treats all weights alike, so a feature measured in cents would be penalised differently from one in euros. Standardise (subtract mean, divide by σ) before regularised linear models. Trees don't need scaling.</li>
+      <li>Other forms of the same idea: limiting tree depth, <b>early stopping</b> (stop training when validation error starts rising), <b>dropout</b> in neural networks (randomly switch off units during training), more data, data augmentation.</li>
+      <li>In Module 2's words: regularisation deliberately introduces a small <em>bias</em> in exchange for a large reduction in <em>variance</em>. MSE = bias² + variance — the total can go down.</li>
+    </ul>
+    <div class="say30"><b>30 seconds — "what is regularisation, and L1 vs. L2?"</b>"Regularisation adds a penalty on the size of the weights to the loss, so the model only uses a feature if it really earns its place — it trades a little bias for a lot less variance and reduces overfitting. L2, or ridge, penalises squared weights: it shrinks them all smoothly and handles correlated features well. L1, or lasso, penalises absolute values: it drives some weights exactly to zero, so it does feature selection. The strength, lambda, is a hyperparameter I tune on validation data, and I standardise the features first so the penalty is fair."</div>
+    <div class="drill"><span class="lab">Exercises C4</span><ol>
+      <li>You have 300 features and suspect only about 20 matter. L1 or L2? Why?</li>
+      <li>Two features are almost copies of each other (balance in € and balance in cents ÷ 100). What does an unregularised linear model tend to do with their weights? What does L2 do?</li>
+      <li>You increase λ from 0 to a huge value. Describe what happens to training error and to validation error along the way.</li>
+      <li>Why standardise features before ridge or lasso, but not before a decision tree?</li>
+    </ol></div>
+  </section>
+
+  <!-- C5 -->
+  <section>
+    <h2><span class="n">C5</span>Validation — keeping yourself honest</h2>
+    <h3>Three sets, three jobs</h3>
+    <table class="t">
+      <thead><tr><th>Set</th><th>Used to</th><th>Typical share</th></tr></thead>
+      <tbody>
+        <tr><td><b>Training</b></td><td>fit the parameters</td><td>60–80 %</td></tr>
+        <tr><td><b>Validation</b></td><td>choose hyperparameters, compare models, pick the threshold</td><td>10–20 %</td></tr>
+        <tr><td><b>Test</b></td><td>estimate final performance — looked at <em>once</em>, at the end</td><td>10–20 %</td></tr>
+      </tbody>
+    </table>
+    <p>Why three and not two: every time you choose something because it did well on a set, you fit to that set a little. After fifty tuning decisions on the validation set, its score is optimistic. The test set has taken no part in any decision, so its number is honest. (It's the "multiple comparisons" problem of Module 2.)</p>
+    <h3>Cross-validation</h3>
+    <p><b>K-fold:</b> split the training data into K parts (5 or 10). Train on K − 1, validate on the remaining one; rotate so each part is the validation set once; average the K scores. You use all the data for both training and validation and you get a sense of the score's variability. Costs K times the compute. <b>Stratified</b> K-fold keeps the class ratio the same in every fold — important for rare events.</p>
+    <h3>Time matters</h3>
+    <p>For anything that evolves — fraud, credit, customer behaviour — split by <b>time</b>: train on the past, validate on the more recent past, test on the most recent. A random split lets the model peek at the future and overstates performance.</p>
+    <h3>Data leakage — the most common way to fool yourself</h3>
+    <p><b>Leakage</b> = information in the training features that would not be available at prediction time, or that comes from the target itself. The model looks superb offline and collapses in production.</p>
+    <table class="t">
+      <thead><tr><th>Kind</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Target leakage</td><td>A default model using "collections agency assigned" — that only happens <em>after</em> the default.</td></tr>
+        <tr><td>Time leakage</td><td>Random split on transactions: the model trains on Tuesday's fraud and "predicts" Monday's.</td></tr>
+        <tr><td>Group leakage</td><td>The same customer in both train and test: the model recognises the customer, not the pattern. Split by customer.</td></tr>
+        <tr><td>Preprocessing leakage</td><td>Computing the mean for standardisation, or selecting features, on the full data before splitting.</td></tr>
+      </tbody>
+    </table>
+    <p><b>Red flag:</b> a result that's too good — AUC 0.99 on a hard problem — or one feature carrying almost all the importance. Assume leakage until proven otherwise.</p>
+    <h3>After deployment: drift</h3>
+    <p>The world changes: <b>data drift</b> (the inputs change — new customer mix, a new market), <b>concept drift</b> (the relationship changes — fraudsters adapt). A model's test score is a snapshot. Monitor inputs and outcomes in production; retrain on a schedule or when metrics degrade.</p>
+    <div class="say30"><b>30 seconds — "how do you validate a model? why train / validation / test?"</b>"I hold data back. The training set fits the parameters; the validation set is for every choice I make — hyperparameters, features, the threshold; and the test set is touched once at the end for an honest estimate, because anything I tuned on is optimistically biased. With limited data I use k-fold cross-validation instead of a single validation split. For anything time-dependent, like fraud or credit, I split by time, not at random, and I keep each customer on one side only. And I'm suspicious of results that look too good — that's usually leakage: a feature that wouldn't exist at prediction time."</div>
+    <div class="drill"><span class="lab">Exercises C5</span><ol>
+      <li>You tune 200 hyperparameter combinations and report the best validation AUC as "the model's performance". What's wrong, and which Module 2 idea is this?</li>
+      <li>A churn model uses the feature "number of support contacts in the 30 days before cancellation". Problem?</li>
+      <li>Fraud data from January to June. Describe a sensible train / validation / test split.</li>
+      <li>You have 2,000 labelled cases and 3 % positives. Why use stratified 5-fold cross-validation rather than one 80/20 split?</li>
+      <li>A model had AUC 0.88 at launch and 0.79 six months later with no code change. Two possible causes and what you'd check.</li>
+      <li>You standardise all features using the mean and σ of the whole dataset, then split. Is that leakage? How serious, and what's the correct order?</li>
+    </ol></div>
+  </section>
+
+  <!-- C6 -->
+  <section>
+    <h2><span class="n">C6</span>Measuring a regression model</h2>
+    <table class="t">
+      <thead><tr><th>Metric</th><th>Formula</th><th>Read it as</th></tr></thead>
+      <tbody>
+        <tr><td><b>MAE</b></td><td><span class="f">mean |y − ŷ|</span></td><td>"on average we're off by €X". Same units as y. Robust to outliers.</td></tr>
+        <tr><td><b>MSE</b></td><td><span class="f">mean (y − ŷ)²</span></td><td>squared units — hard to read; it's what most models optimise.</td></tr>
+        <tr><td><b>RMSE</b></td><td><span class="f">√MSE</span></td><td>same units as y; weights large errors more. RMSE ≥ MAE always; a big gap means a few large misses.</td></tr>
+        <tr><td><b>R²</b></td><td><span class="f">1 − SS_res / SS_tot</span></td><td>share of the variance explained, vs. always predicting the mean. 1 = perfect, 0 = no better than the mean, negative = worse than the mean.</td></tr>
+        <tr><td><b>MAPE</b></td><td><span class="f">mean |y − ŷ| / |y|</span></td><td>percentage error; breaks when y is near zero.</td></tr>
+      </tbody>
+    </table>
+    <p><b>Squared vs. absolute error:</b> if large misses are disproportionately costly (capacity planning, capital), use squared; if outliers are noise you don't want to chase (delays "up to 12 hours messing up the model"), use absolute, or cap / log-transform the target. Always compare against a <b>baseline</b>: predicting the mean or median for everyone.</p>
+    <div class="drill"><span class="lab">Exercises C6</span><ol>
+      <li>A model predicting monthly spend has MAE €40 and RMSE €160. What does the gap tell you?</li>
+      <li>R² = 0.02. Is the model useless? What would you want to know before deciding?</li>
+      <li>You predict LTV, which is heavy-tailed. Name two things you could do so that a handful of whales don't dominate training.</li>
+    </ol></div>
+  </section>
+
+  <!-- C7 -->
+  <section>
+    <h2><span class="n">C7</span>Measuring a classifier</h2>
+    <h3>The confusion matrix — everything starts here</h3>
+    <table class="t">
+      <thead><tr><th></th><th>Actually positive (default)</th><th>Actually negative</th></tr></thead>
+      <tbody>
+        <tr><td><b>Predicted positive</b></td><td><b>TP</b> — caught</td><td><b>FP</b> — false alarm (Type I)</td></tr>
+        <tr><td><b>Predicted negative</b></td><td><b>FN</b> — missed (Type II)</td><td><b>TN</b> — correctly left alone</td></tr>
+      </tbody>
+    </table>
+    <table class="t">
+      <thead><tr><th>Metric</th><th>Formula</th><th>Question it answers</th></tr></thead>
+      <tbody>
+        <tr><td><b>Accuracy</b></td><td><span class="f">(TP + TN) / all</span></td><td>share of all predictions that are right — misleading when classes are imbalanced</td></tr>
+        <tr><td><b>Precision</b></td><td><span class="f">TP / (TP + FP)</span></td><td>of those I flagged, how many were real? — P(positive | flagged)</td></tr>
+        <tr><td><b>Recall</b> (sensitivity, TPR)</td><td><span class="f">TP / (TP + FN)</span></td><td>of the real ones, how many did I catch? — P(flagged | positive)</td></tr>
+        <tr><td><b>False-positive rate</b></td><td><span class="f">FP / (FP + TN)</span></td><td>of the negatives, how many did I wrongly flag?</td></tr>
+        <tr><td><b>Specificity</b></td><td><span class="f">TN / (TN + FP) = 1 − FPR</span></td><td>of the negatives, how many did I correctly leave alone?</td></tr>
+        <tr><td><b>F1</b></td><td><span class="f">2 · P · R / (P + R)</span></td><td>harmonic mean of precision and recall — one number when you need both; low if either is low</td></tr>
+      </tbody>
+    </table>
+    <div class="ex"><span class="lab">Worked — the accuracy trap</span>1,000 customers, 50 default (5 %). The model flags 100: 40 real defaulters and 60 false alarms. TP 40, FP 60, FN 10, TN 890.<br>Accuracy = 930 / 1,000 = <b>93 %</b>. Precision = 40 / 100 = <b>40 %</b>. Recall = 40 / 50 = <b>80 %</b>. FPR = 60 / 950 = 6.3 %. F1 = 2·0.4·0.8 / 1.2 = 0.53.<br>The model "never flag anyone" has accuracy <b>95 %</b> — higher — and catches nothing. With rare events, accuracy rewards doing nothing.</div>
+
+    <h3>The threshold — one model, many operating points</h3>
+    <p>A classifier outputs a <b>score</b> (a probability). You choose a <b>threshold</b>: flag everything above it. Lower the threshold → catch more (recall ↑) but with more false alarms (precision ↓). Raise it → the opposite. The threshold is a <b>business decision</b>: it depends on what a miss costs versus what a false alarm costs (the euro tables you built for ATO and delinquency). 0.5 is rarely the right one.</p>
+
+    <h3>Threshold-free metrics: ROC and PR curves</h3>
+    <ul class="tight">
+      <li><b>ROC curve:</b> plot recall (TPR) against false-positive rate for every threshold. <b>AUC</b> (area under it): 0.5 = random, 1.0 = perfect. Interpretation worth memorising: <em>AUC is the probability that a randomly chosen positive gets a higher score than a randomly chosen negative.</em> It measures <b>ranking</b> quality, independent of the threshold and of the class balance.</li>
+      <li><b>PR curve:</b> plot precision against recall. Its baseline is the positive rate (a random model has precision = base rate). <b>Use PR-AUC when positives are rare:</b> ROC can look excellent (AUC 0.95) because the FPR's denominator is the huge negative class, while precision is still poor. PRAGMA's credit result is reported as PR-AUC for exactly this reason.</li>
+      <li><b>Calibration:</b> are the probabilities honest? Among cases scored 20 %, do about 20 % happen? A model can rank perfectly and be badly calibrated. It matters whenever the probability is <em>used as a number</em> — expected loss, pricing.</li>
+    </ul>
+
+    <h3>Imbalanced classes — the standard toolkit</h3>
+    <ul class="tight">
+      <li>Right metrics: precision, recall, PR-AUC, cost-based — not accuracy.</li>
+      <li>Move the threshold rather than the data, first.</li>
+      <li>Class weights (make mistakes on the rare class cost more in the loss).</li>
+      <li>Resampling: undersample the majority or oversample the minority (SMOTE) — on the training set only, never on validation or test.</li>
+      <li>Stratified splits; more positive examples if you can get them.</li>
+    </ul>
+    <p><b>More than two classes:</b> a K×K confusion matrix; precision and recall per class, then averaged (macro = each class counts equally; weighted = by class size).</p>
+
+    <div class="say30"><b>30 seconds — "how do you evaluate a classifier? is accuracy a good metric?"</b>"I start from the confusion matrix. Accuracy is fine when classes are balanced, but with a rare event it's misleading — if 1 % of transactions are fraud, predicting 'never fraud' is 99 % accurate. So I look at precision — of what I flagged, how much was real — and recall — of the real cases, how many I caught — and at the trade-off between them as I move the threshold, which I set from the business cost of a miss versus a false alarm. To compare models independent of threshold I use AUC — the probability a random positive outranks a random negative — and for rare positives the precision–recall curve, because ROC can look flattering there. If the probability itself is used, for pricing say, I also check calibration."</div>
+
+    <div class="drill"><span class="lab">Exercises C7</span><ol>
+      <li>10,000 transactions, 100 fraud. The model flags 300, of which 80 are fraud. Build the confusion matrix; compute accuracy, precision, recall, FPR, F1.</li>
+      <li>Same data: what's the accuracy of "never flag"? What does that tell you about accuracy?</li>
+      <li>You lower the threshold. What happens to TP, FP, precision, recall? Which of the four can only go one way?</li>
+      <li>Model A: AUC 0.92. Model B: AUC 0.90. Is A always the better choice? Give one reason it might not be.</li>
+      <li>Fraud at 0.1 %. Why might ROC-AUC = 0.97 still mean an unusable model? Which curve would show it?</li>
+      <li>A model ranks customers perfectly by default risk but says "30 %" for a group where 10 % default. Which property is broken, and for which use does it matter?</li>
+      <li>You oversample fraud cases to 50/50 and <em>then</em> split into train and test. What's wrong?</li>
+      <li>For a model that auto-blocks cards, would you favour precision or recall? For one that queues cases for human review? Why?</li>
+    </ol></div>
+  </section>
+
+  <!-- cheat -->
+  <section>
+    <h2><span class="n">C8</span>One-page cheat sheet</h2>
+    <ul class="facts">
+      <li><b>Model</b><span>ŷ = f(x; w). Features in, prediction out; training finds w from labelled history. Hyperparameters are chosen, parameters are learned.</span></li>
+      <li><b>Loss</b><span>MSE (mean, outlier-sensitive) · MAE (median, robust) · log loss (classification; punishes confident mistakes).</span></li>
+      <li><b>Gradient descent</b><span>Step downhill on the loss; learning rate = step size. SGD = on random mini-batches.</span></li>
+      <li><b>Underfit / overfit</b><span>Both errors high = high bias. Train low, test high = high variance. The gap is the symptom.</span></li>
+      <li><b>Bias–variance</b><span>error = bias² + variance + noise. Complexity ↑ → bias ↓, variance ↑. Test error is U-shaped.</span></li>
+      <li><b>Fix variance / fix bias</b><span>More data, regularise, simplify, ensemble / richer model, better features.</span></li>
+      <li><b>L2 vs. L1</b><span>Ridge shrinks all weights; lasso zeroes some (feature selection). Scale features first. λ by validation.</span></li>
+      <li><b>Train / val / test</b><span>Fit / choose / report once. K-fold when data is scarce. Split by time and by customer.</span></li>
+      <li><b>Leakage</b><span>A feature not available at prediction time. "Too good" = suspect. Then drift after launch: monitor, retrain.</span></li>
+      <li><b>Confusion matrix</b><span>Precision = TP/(TP+FP). Recall = TP/(TP+FN). FPR = FP/(FP+TN). F1 = harmonic mean.</span></li>
+      <li><b>Accuracy trap</b><span>With a 1 % event, "always no" is 99 % accurate. Use precision / recall / PR-AUC.</span></li>
+      <li><b>Threshold · AUC · calibration</b><span>Threshold = business cost decision. AUC = P(positive outranks negative). Calibration = the probabilities mean what they say.</span></li>
+    </ul>
+  </section>
+
+  <!-- answers -->
+  <section>
+    <h2><span class="n">A</span>Answers — check only after you've written yours</h2>
+    <h3>C1</h3>
+    <ol class="ans">
+      <li>(a) regression; (b) unsupervised (clustering); (c) binary classification; (d) multi-class classification.</li>
+      <li>Features: dispute amount, merchant's past dispute rate, customer tenure / past disputes, claim type. Target: resolved for the customer (1/0). Invalid: "refund issued" or "agent who closed the case" — known only after the outcome (leakage).</li>
+      <li>Parameter; hyperparameter; hyperparameter; parameter (learned from data during training).</li>
+    </ol>
+    <h3>C2</h3>
+    <ol class="ans">
+      <li>Errors: 2, 0, 30. MAE = 32/3 = 10.7. MSE = (4 + 0 + 900)/3 = 301 (RMSE 17.4). The single 30-point miss is 99.6 % of the MSE.</li>
+      <li>MAE — it targets the median (about 2 days). MSE targets the mean, which the 90-day cases drag up, so it would over-predict for typical disputes.</li>
+      <li>Log loss charges −log(probability given to what happened). Saying 0.99 for a negative gives the truth 0.01: −log(0.01) = 4.6. Saying 0.6 gives it 0.4: −log(0.4) = 0.92. Confident and wrong costs five times more.</li>
+      <li>Learning rate too high — the steps overshoot the minimum and the loss diverges. Lower it (or check for unscaled features).</li>
+    </ol>
+    <h3>C3</h3>
+    <ol class="ans">
+      <li>Overfitting (high variance). Try: regularisation / simpler model (shallower trees, fewer features), more training data, cross-validated early stopping; also check for leakage.</li>
+      <li>Underfitting (high bias) — train and validation agree and both are too low. More data won't help; the curves have converged. Need better features or a more expressive model.</li>
+      <li>Variance. Cure: bagging — average many trees trained on resampled data (a random forest), or limit the depth.</li>
+      <li>Irreducible noise: outcomes are partly random given everything you can observe. Two identical customers can end differently.</li>
+      <li>More data does not reduce bias (the model still can't represent the truth). More data reduces variance.</li>
+    </ol>
+    <h3>C4</h3>
+    <ol class="ans">
+      <li>L1 — it drives the weights of unhelpful features to exactly zero, leaving a sparse model of the ~20 that matter.</li>
+      <li>Unregularised: the weights are unstable — it can put +1,000 on one and −999 on the other; tiny data changes swing them wildly (high variance). L2 splits the weight roughly evenly between them and keeps both small.</li>
+      <li>Training error rises steadily (the model is increasingly constrained). Validation error first falls (less overfitting), reaches a minimum, then rises (underfitting). Pick λ at the minimum.</li>
+      <li>The penalty compares weights across features, and a weight's size depends on the feature's units; standardising makes the penalty fair. Trees split on thresholds — any monotonic rescaling gives the same splits.</li>
+    </ol>
+    <h3>C5</h3>
+    <ol class="ans">
+      <li>Selection bias on the validation set: the best of 200 is partly lucky (multiple comparisons). Report the score of that chosen model on the untouched test set.</li>
+      <li>Leakage: "before cancellation" is defined using the outcome date. At prediction time you don't know when (or whether) they'll cancel. Use contacts in the 30 days before the <em>prediction</em> date.</li>
+      <li>By time: train Jan–Apr, validate May, test June (and keep each customer / card on one side if you can). Not a random split.</li>
+      <li>60 positives in total; a single 20 % split has ~12 positives — its metric is extremely noisy, and an unlucky split could have 5. Stratified 5-fold keeps 12 positives in each fold and uses all 60 for evaluation; you also see the spread across folds.</li>
+      <li>Data drift (the population changed — new market, new product, new acquisition channel) or concept drift (fraudsters adapted; the relationship changed). Check feature distributions now vs. training, performance by segment and by month, label delays; retrain on recent data.</li>
+      <li>Yes — preprocessing leakage: test-set information shaped the transformation. Usually small for means and σ, but serious for anything using the target (feature selection, target encoding). Correct order: split first; fit the scaler on train only; apply it to validation and test.</li>
+    </ol>
+    <h3>C6</h3>
+    <ol class="ans">
+      <li>A few very large errors: RMSE ≫ MAE means the error distribution has a heavy tail — most predictions are close, a handful are wildly off. Look at who they are (whales, new customers).</li>
+      <li>Not necessarily. It explains 2 % of the variance, which is useless for predicting an individual but can still be valuable in aggregate or as a ranking signal (a small edge over millions of decisions). Ask: what decision does it feed, and does it beat the baseline on that decision?</li>
+      <li>Log-transform the target; cap / winsorise it; use MAE or a robust (Huber) loss; or model "is a whale?" separately.</li>
+    </ol>
+    <h3>C7</h3>
+    <ol class="ans">
+      <li>TP 80, FP 220, FN 20, TN 9,680. Accuracy 97.6 %. Precision 80/300 = 26.7 %. Recall 80/100 = 80 %. FPR 220/9,900 = 2.2 %. F1 = 2·0.267·0.8/1.067 = 0.40.</li>
+      <li>99 % — higher than the model's 97.6 %, while catching nothing. Accuracy is the wrong yardstick for rare events.</li>
+      <li>TP ↑ (or equal), FP ↑ (or equal), recall ↑ (or equal); precision usually ↓ but can go either way. Recall can only go up as the threshold falls.</li>
+      <li>No. AUC averages over all thresholds; you operate at one. B may be better in the region you care about (e.g. at 1 % FPR). B may also be better calibrated, faster, simpler, more stable over time, or easier to explain to a regulator.</li>
+      <li>FPR's denominator is the 99.9 % of legitimate transactions, so a tiny FPR is still a mountain of false alarms: at 1 % FPR on 1 million transactions you have ~10,000 false alarms against at most 1,000 frauds — precision under 10 %. The precision–recall curve shows it.</li>
+      <li>Calibration. Ranking (AUC) is fine. It matters when the number is used directly — pricing, expected loss, provisioning — and doesn't matter if you only take the top N.</li>
+      <li>Leakage: copies (or synthetic neighbours) of the same fraud cases land in both train and test, and the test set no longer has the real 0.1 % balance. Split first; resample the training set only; evaluate on untouched data.</li>
+      <li>Auto-block: precision — every false positive hurts a real customer with no human to catch it. Human review queue: recall — a reviewer filters the false alarms cheaply; the costly error is a missed fraud.</li>
+    </ol>
+  </section>
+
+  <p class="colophon">
+    Tomás Zanchetti · Revolut ML Basics · Module 3 — Maths for ML · 05/10/2026<br>
+    Next: Module 4 — The models: linear and logistic regression, k-NN, naive Bayes, decision trees, random forests, gradient boosting, SVM, neural networks, k-means — what each is, pros and cons, and when to use which.
+  </p>
+
+</div>
+</body>
+</html>
