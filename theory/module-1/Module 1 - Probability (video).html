@@ -35,9 +35,10 @@
     <select id="speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
     <label><input type="checkbox" id="snd" checked> Sound</label>
     <label><input type="checkbox" id="voice"> Voice-over</label>
+    <select id="voicesel" title="Voice"></select>
   </div>
   <div class="scenes" id="scenes"></div>
-  <div class="hint">Space = play/pause · ← → = previous / next scene · click the bar or a chip to jump. Voice-over uses your browser's built-in English voice.</div>
+  <div class="hint">Space = play/pause · ← → = previous / next scene · click the bar or a chip to jump. Voice-over: pick an English voice in the menu next to the checkbox (it plays a sample when you change it).</div>
 </div>
 <script>
 (() => {
@@ -335,7 +336,24 @@ const chime = () => { tone(523.25,.5,'sine',.14); tone(659.25,.5,'sine',.11,.07)
 const blip = () => tone(880,.09,'triangle',.07);
 
 /* ---------- voice-over (Web Speech) ---------- */
-function speak(s){ if(!document.getElementById('voice').checked || !('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.lang='en-GB'; u.rate = 1.02*parseFloat(document.getElementById('speed').value); const v=speechSynthesis.getVoices().find(v=>/en-GB/.test(v.lang)) || speechSynthesis.getVoices().find(v=>/^en/.test(v.lang)); if(v) u.voice=v; speechSynthesis.speak(u); }
+// Only English voices are offered; the system default (often the OS language) is never used.
+const NOVELTY = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i;
+const PREFER = [/Google UK English Male/i, /Google UK English Female/i, /Daniel.*(Enhanced|Premium)/i, /Serena/i, /Kate/i, /Oliver/i, /^Daniel/i, /Arthur/i, /Martha/i, /Microsoft (Ryan|Sonia|Libby)/i, /Google US English/i, /Samantha.*(Enhanced|Premium)/i, /^Samantha/i, /Ava/i, /Alex/i, /Karen/i, /Moira/i];
+let VOICES = [];
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  const all = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name));
+  const rank = v => { const i = PREFER.findIndex(r => r.test(v.name)); return (i<0 ? 100 : i) + (/en[-_]GB/i.test(v.lang) ? 0 : 0.5); };
+  VOICES = all.sort((a,b) => rank(a)-rank(b));
+  const sel = document.getElementById('voicesel'); let saved = null; try { saved = localStorage.getItem('m1voice'); } catch(e) {}
+  sel.innerHTML = VOICES.length ? '' : '<option>no English voice installed</option>';
+  VOICES.forEach((v,i) => { const o=document.createElement('option'); o.value=v.name; o.textContent=`${v.name} (${v.lang})`; if(saved ? v.name===saved : i===0) o.selected=true; sel.appendChild(o); });
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+document.getElementById('voicesel').addEventListener('change', e => { try { localStorage.setItem('m1voice', e.target.value); } catch(err) {} speakNow('This is the voice you selected.'); });
+function speakNow(s){ if(!('speechSynthesis' in window)) return; if(!VOICES.length) loadVoices(); const v = VOICES.find(v => v.name===document.getElementById('voicesel').value) || VOICES[0]; if(!v) return;   // never fall back to a non-English default
+  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.voice=v; u.lang=v.lang; u.rate = 0.98*parseFloat(document.getElementById('speed').value); u.pitch=1; speechSynthesis.speak(u); }
+function speak(s){ if(document.getElementById('voice').checked) speakNow(s); }
 
 /* ---------- render ---------- */
 let T=0, playing=false, last=0, prevScene=-1, prevCap=-1;
