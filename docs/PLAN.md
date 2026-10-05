@@ -30,6 +30,10 @@ Decision 29/09: one module per topic, from zero upwards, concepts shown in real 
 | 3 | **Maths for ML** — what a model is, loss, gradient descent, bias–variance, regularisation, validation, leakage, metrics (confusion matrix, precision/recall, ROC/PR-AUC) | 1 | ✅ PDF + video (05/10) |
 | 4 | **The models** — linear/logistic regression, k-NN, naive Bayes, trees, random forest, gradient boosting, SVM, neural nets, k-means, data prep — pros/cons and when | 4 | ✅ PDF + video (05/10) |
 
+**Wrap-up (05/10):** `theory/wrap-up/Wrap-up - The whole picture (video).html` — one lending case end to end (decision → data → model choice → probability machine → training = statistics → three checks → threshold from costs → A/B test → drift), plus plain-language explanations. Spine: *the model speaks probability; statistics builds it and checks it; the business decides the threshold.*
+
+**What Revolut's kojino link adds beyond the modules:** probability *puzzles* (two children, fair coin from a biased one, flips until HH, fair-vs-biased coin Bayes), "is more data always better?", covariate vs. concept shift, MLE vs. MAP, and "explain an A/B test / confidence interval to someone with no statistics". Answers there are 3–4 bullets: breadth, not depth. → goes into the cases and the question bank.
+
 **Next (6–7/10):** cases per module in chat (Revolut-shaped, strategic) → question bank from their links → mock interviews in English.
 
 ## Track A (old plan, superseded) — Theory (one PDF per module, in `theory/`)
